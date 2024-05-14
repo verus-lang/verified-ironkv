@@ -20,12 +20,11 @@ To use this repository, you'll need the following tools:
   * scons (installable by running `pip install scons`)
   * Verus (installable from `https://github.com/verus-lang/verus`)
 
-# Dependencies
-
-[Install Dotnet](https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu-2304)
+To satisfy the above .NET requirement on Ubuntu, [this
+website](https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu-2304)
+may be handy, as may this command line:
 ```
-sudo apt-get update && \
-  sudo apt-get install -y aspnetcore-runtime-7.0
+sudo apt-get update && sudo apt-get install -y aspnetcore-runtime-7.0
 ```
 
 # Verification and Compilation
