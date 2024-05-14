@@ -1,0 +1,9 @@
+certs/
+.sconsign.dblite
+liblib.so
+liblib.dylib
+lib.dll
+lib.dll.exp
+lib.dll.lib
+lib.pdb
+*~
