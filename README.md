@@ -30,8 +30,6 @@ sudo apt-get update && \
 
 # Verification and Compilation
 
-ironsht now relies on Verus's `main_new` branch
-
 To verify the Verus contents of this repo and build the executables from the
 contents of this repo, run:
 
