@@ -110,7 +110,6 @@ The client's output will primarily consist of reports of the form `#req
 
 We haven't implemented crash recovery, so if you restart a server its state will
 be empty.
-```
 
 # Version History
 - v0.1:  Initial code release
