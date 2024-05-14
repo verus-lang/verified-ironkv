@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1'  # Run every Monday night at midnight UTC
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Verus
+        run: ./tools/ci-setup-verus.sh
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            ${{ github.workspace }}/verus/source -> target
+            ${{ github.workspace }}/verus/tools/vargo -> target
+          cache-directories: ${{ github.workspace }}/verus/source/target-verus
+      - name: Verus cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/verus
+          key: ${{ runner.os }}-verus-${{ hashFiles('verus/.git/refs/heads/main') }}
+      - name: Build Verus
+        run: ./tools/ci-build-verus.sh
+      - name: Verify ironsht
+        run: |
+          verus --crate-type=dylib --expand-errors --time --no-report-long-running ironsht/src/lib.rs
