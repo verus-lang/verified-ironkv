@@ -5,6 +5,13 @@ This repo contains a port of the IronSHT system from IronFleet
 to Verus. As such, this document and many of the files here are
 modified versions of corresponding files in the IronFleet repo.
 
+Note that this repository only verifies the "host program"
+from IronFleet. IronFleet also proves that the host program
+TLA state machine model, in the context of a distributed system,
+implements the high-level spec. This repository doesn't replicate
+that layer of proof, instead focusing on the implementation-level
+reasoning.
+
 # Setup
 
 To use this repository, you'll need the following tools:
