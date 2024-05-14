@@ -112,9 +112,5 @@ We haven't implemented crash recovery, so if you restart a server its state will
 be empty.
 ```
 
-# Contributing
-
-See the [CONTRIBUTING](./CONTRIBUTING.md) file for more details.
-
 # Version History
 - v0.1:  Initial code release
