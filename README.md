@@ -1,8 +1,7 @@
 # Overview
 
-This repo contains a port of the IronSHT system from IronFleet
-(`https://github.com/microsoft/Ironclad/tree/main/ironfleet`)
-to Verus. As such, this document and many of the files here are
+This repo contains a port of the IronSHT system from [IronFleet](https://github.com/microsoft/Ironclad/tree/main/ironfleet)
+to [Verus](https://github.com/verus-lang/verus). As such, this document and many of the files here are
 modified versions of corresponding files in the IronFleet repo.
 
 Note that this repository only verifies the "host program"
@@ -15,15 +14,15 @@ reasoning.
 # Setup
 
 To use this repository, you'll need the following tools:
-  * .NET 6.0 SDK (available at `https://dotnet.microsoft.com/download`)
+  * .NET 6.0 SDK (available at https://dotnet.microsoft.com/download)
   * python 2 or 3 (needed for running scons)
   * scons (installable by running `pip install scons`)
-  * Verus (installable from `https://github.com/verus-lang/verus`)
+  * Verus (installable from https://github.com/verus-lang/verus)
 
 To satisfy the above .NET requirement on Ubuntu, [this
 website](https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu-2304)
 may be handy, as may this command line:
-```
+```sh
 sudo apt-get update && sudo apt-get install -y aspnetcore-runtime-7.0
 ```
 
@@ -32,10 +31,12 @@ sudo apt-get update && sudo apt-get install -y aspnetcore-runtime-7.0
 To verify the Verus contents of this repo and build the executables from the
 contents of this repo, run:
 
-  `scons --verus-path=<path_to_verus>`
+```sh
+scons --verus-path=<path_to_verus>
+```
 
 where `<path_to_verus>` is the path to your local copy of the Verus repo;
-this is where `scons` will look for `source/target/rust-verify.sh`.
+this is where `scons` will look for `source/target-verus/*/verus`.
 
 To use `<n>` threads in parallel, add `-j <n>` to this command.
 
@@ -62,8 +63,8 @@ such address can be a hostname like `www.myservice.com` or an IP address like
 `127.0.0.1` or `2001:db8:3333:4444:CCCC:DDDD:EEEE:FFFF`.
 
 For instance, you can run the following command:
-```
-  dotnet ironsht/bin/CreateIronServiceCerts.dll outputdir=certs name=MyService type=TestService addr1=server1.com port1=6000 addr2=server2.com port2=7000
+```sh
+dotnet ironsht/bin/CreateIronServiceCerts.dll outputdir=certs name=MyService type=TestService addr1=server1.com port1=6000 addr2=server2.com port2=7000
 ```
 This will create three files in the directory `certs`.  Two of these files,
 `MyService.TestService.server1.private.txt` and
@@ -89,20 +90,20 @@ information. Make sure your firewall isn't blocking the TCP ports you use.
 
 To test the IronSHT sharded hash table on a single machine, you can do the following.
 First, create certificates with:
-```
-  dotnet ironsht/bin/CreateIronServiceCerts.dll outputdir=certs name=MySHT type=IronSHT addr1=127.0.0.1 port1=4001 addr2=127.0.0.1 port2=4002 addr3=127.0.0.1 port3=4003
+```sh
+dotnet ironsht/bin/CreateIronServiceCerts.dll outputdir=certs name=MySHT type=IronSHT addr1=127.0.0.1 port1=4001 addr2=127.0.0.1 port2=4002 addr3=127.0.0.1 port3=4003
 ```
 
 Then, run each of the following three server commands, each in a different window:
-```
-  dotnet ironsht/bin/IronSHTServer.dll certs/MySHT.IronSHT.service.txt certs/MySHT.IronSHT.server1.private.txt
-  dotnet ironsht/bin/IronSHTServer.dll certs/MySHT.IronSHT.service.txt certs/MySHT.IronSHT.server2.private.txt
-  dotnet ironsht/bin/IronSHTServer.dll certs/MySHT.IronSHT.service.txt certs/MySHT.IronSHT.server3.private.txt
+```sh
+dotnet ironsht/bin/IronSHTServer.dll certs/MySHT.IronSHT.service.txt certs/MySHT.IronSHT.server1.private.txt
+dotnet ironsht/bin/IronSHTServer.dll certs/MySHT.IronSHT.service.txt certs/MySHT.IronSHT.server2.private.txt
+dotnet ironsht/bin/IronSHTServer.dll certs/MySHT.IronSHT.service.txt certs/MySHT.IronSHT.server3.private.txt
 ```
 
 Finally, run this client command in yet another window:
-```
-  dotnet ironsht/bin/IronSHTClient.dll certs/MySHT.IronSHT.service.txt nthreads=10 duration=30 workload=g numkeys=1000
+```sh
+dotnet ironsht/bin/IronSHTClient.dll certs/MySHT.IronSHT.service.txt nthreads=10 duration=30 workload=g numkeys=1000
 ```
 The client's output will primarily consist of reports of the form `#req
 <thread-ID> <request-number> <time-in-ms>`.
