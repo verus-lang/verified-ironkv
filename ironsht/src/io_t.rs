@@ -388,7 +388,7 @@ impl NetClient {
             Ok(())
         }
         else {
-            Err(IronfleetIOError{message: String::from_rust_string("Failed to send".to_string())})
+            Err(IronfleetIOError{message: "Failed to send".to_string()})
         }
     }
 
