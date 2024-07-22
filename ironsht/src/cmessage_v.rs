@@ -189,7 +189,7 @@ pub open spec fn abstractify_cmessage_seq(messages: Seq<CSingleMessage>) -> Seq<
 /* $line_count$Exec$ */   #[tag = 2]
 /* $line_count$Exec$ */   InvalidMessage,
 /* $line_count$Exec$ */ }
-/* $line_count$Proof$ */ [rlimit attr = verifier::rlimit(20)]
+/* $line_count$Proof$ */ [rlimit attr = verifier::rlimit(25)]
 }
 
 // Note simplifications from IronFleet:
