@@ -7,7 +7,6 @@
 use builtin::*;
 use builtin_macros::*;
 use vstd::bytes::*;
-use vstd::function::*;
 use vstd::map::*;
 use vstd::modes::*;
 use vstd::multiset::*;
@@ -283,7 +282,7 @@ verus! {
                 assert(vec[i].ghost_serialize().len() < max_len);
             }
             lemma_seq_fold_left_sum_le(vec@, 0, max_len, f);
-            fun_ext_2(ag, af);
+            assert(ag =~= af);
         }
 
         assert(
@@ -299,9 +298,9 @@ verus! {
             let sa = |acc: Seq<u8>, x: CKeyKV| acc + s(x);
             lemma_seq_fold_left_append_len_int(vec@, emp, s);
             assert(vec@.fold_left(emp, sa).len() as int == vec@.fold_left(0, asl));
-            fun_ext_2(sa, sg);
+            assert(sa =~= sg);
             assert(vec@.fold_left(emp, sg).len() as int == vec@.fold_left(0, asl));
-            fun_ext_2(agl, asl);
+            assert(agl =~= asl);
             assert(vec@.fold_left(emp, sg).len() == vec@.fold_left(0, agl));
         }
 
