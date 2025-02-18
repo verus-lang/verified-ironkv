@@ -128,7 +128,7 @@ impl CKeyHashMap {
     #[verifier(external_body)]
     pub broadcast proof fn lemma_to_vec(self)
       ensures
-        #[trigger(self.spec_to_vec())]
+        #![trigger self.spec_to_vec()]
         Self::spec_from_vec(self.spec_to_vec()) == self,
         self.spec_to_vec().len() == self@.dom().len(),
         spec_sorted_keys(self.spec_to_vec()),
@@ -150,7 +150,7 @@ impl CKeyHashMap {
     #[verifier(external_body)]
     pub broadcast proof fn lemma_from_vec(v: Vec<CKeyKV>)
       ensures
-        #[trigger(Self::spec_from_vec(v))]
+        #![trigger Self::spec_from_vec(v)]
         spec_sorted_keys(v) ==> Self::spec_from_vec(v).spec_to_vec() == v;
 
     #[verifier(external_body)]
