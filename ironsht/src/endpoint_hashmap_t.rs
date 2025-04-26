@@ -24,7 +24,7 @@ pub struct HashMap<V> {
 impl<V> HashMap<V>
 {
     /// The abstract contents of the HashMap.
-    pub closed spec fn view(self) -> Map<AbstractEndPoint, V>;
+    pub uninterp spec fn view(self) -> Map<AbstractEndPoint, V>;
 
     #[verifier(external_body)]
     pub fn new() -> (out: Self)

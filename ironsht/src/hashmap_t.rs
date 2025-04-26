@@ -31,7 +31,7 @@ pub struct CKeyHashMap {
 
 impl CKeyHashMap {
     /// The abstract contents of the CKeyHashMap.
-    pub closed spec fn view(self) -> Map<AbstractKey, Seq<u8>>;
+    pub uninterp spec fn view(self) -> Map<AbstractKey, Seq<u8>>;
 
     #[verifier(external_body)]
     pub fn new() -> (out: CKeyHashMap)
@@ -100,8 +100,8 @@ impl CKeyHashMap {
         panic!()
     }
 
-    pub closed spec fn spec_to_vec(&self) -> Vec<CKeyKV>;
-    pub closed spec fn spec_from_vec(v: Vec<CKeyKV>) -> Self;
+    pub uninterp spec fn spec_to_vec(&self) -> Vec<CKeyKV>;
+    pub uninterp spec fn spec_from_vec(v: Vec<CKeyKV>) -> Self;
     #[verifier(external_body)]
     #[verifier(when_used_as_spec(spec_to_vec))]
     pub fn to_vec(&self) -> (res: Vec<CKeyKV>)
