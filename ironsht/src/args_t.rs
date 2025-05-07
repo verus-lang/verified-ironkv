@@ -31,6 +31,8 @@ ensures
             i <= v.len(),
             i == out.len(),
             forall |j| #![auto] 0 <= j < i  ==> out@[j] == v@[j],
+        decreases
+            v.len() - i,
     {
         out.push(v[i]);
         i = i + 1;

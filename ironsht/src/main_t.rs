@@ -26,6 +26,7 @@ verus! {
 pub struct IronError {
 }
 
+#[verifier::exec_allows_no_decreases_clause]
 // net_impl comes from outside so this function can be verified.
 pub fn sht_main(netc: NetClient, args: Args) -> Result<(), IronError>
     requires

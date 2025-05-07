@@ -156,6 +156,8 @@ impl Marshalable for u64 {
         data@.subrange(0, old(data)@.len() as int) == old(data)@,
         data@.subrange(old(data)@.len() as int, data@.len() as int) == self.ghost_serialize().subrange(0, i as int),
         data@.len() == old(data)@.len() + i as int,
+      decreases
+        8 - i
     {
       assert(data@.subrange(old(data)@.len() as int, data@.len() as int) == data@.subrange(old(data)@.len() as int, old(data)@.len() + i as int));
 
@@ -343,6 +345,8 @@ impl Marshalable for Vec<u8> {
         data@.subrange(0, old(data)@.len() as int) == old(data)@,
         data@.subrange(old(data)@.len() as int, data@.len() as int) == self.ghost_serialize().subrange(0, i + init@),
         data@.len() == old(data)@.len() + i + init@,
+      decreases
+        self.len() - i
     {
       assert(data@.subrange(old(data)@.len() as int, data@.len() as int) == data@.subrange(old(data)@.len() as int, old(data)@.len() + i + init@));
 
@@ -633,6 +637,8 @@ impl<T: Marshalable> Marshalable for Vec<T> {
         res ==> (forall |x: T| self@.subrange(0, i as int).contains(x) ==> #[trigger] x.is_marshalable()),
         res ==> total_len as int <= usize::MAX,
         !res ==> !self.is_marshalable(),
+      decreases
+        self.len() - i + if res { 1int } else { 0int }
     {
       assert(res);
       res = res && self[i]._is_marshalable() && (usize::MAX - total_len >= self[i].serialized_size());
@@ -704,6 +710,8 @@ impl<T: Marshalable> Marshalable for Vec<T> {
                self@.subrange(0 as int, self@.len() as int).fold_left(0, |acc: int, x: T| acc + x.ghost_serialize().len()) <= usize::MAX,
         res == (self@.len() as usize).ghost_serialize().len() +
                self@.subrange(0 as int, i as int).fold_left(0, |acc: int, x: T| acc + x.ghost_serialize().len()),
+      decreases
+        self.len() - i
     {
       proof {
         let f = |x: T| x.ghost_serialize();
@@ -765,6 +773,8 @@ impl<T: Marshalable> Marshalable for Vec<T> {
             self@.subrange(0, i as int).fold_left(Seq::<u8>::empty(), |acc: Seq<u8>, x: T| acc + x.ghost_serialize()),
         forall |x: T| self@.contains(x) ==> #[trigger] x.is_marshalable(),
         data@.len() >= old(data)@.len(),
+      decreases
+        self.len() - i
     {
       self[i].serialize(data);
       i = i + 1;
@@ -833,6 +843,8 @@ impl<T: Marshalable> Marshalable for Vec<T> {
         len.ghost_serialize().len() +
           res@.fold_left(0, |acc: int, x: T| acc + x.ghost_serialize().len()) == end - start,
         accf@ == |acc: Seq<u8>, x: T| acc + x.ghost_serialize(),
+      decreases
+        len - i
     {
       let (x, end1) = match T::deserialize(data, end) { None => {
         return None;

@@ -127,7 +127,7 @@ impl CSingleDelivery {
                 let mut i=0;
 
                 while i < ack_state.un_acked.len()
-                invariant
+                  invariant
                     0 <= i <= ack_state.un_acked.len(),
                     self.valid(),   // Everybody hates having to carry everything through here. :v(
                     src.abstractable(),
@@ -138,6 +138,8 @@ impl CSingleDelivery {
                     packets@.map_values(|p: CPacket| p@).to_set() ==
                         old(packets)@.map_values(|p: CPacket| p@).to_set() + self@.un_acked_messages_for_dest_up_to(src@, dst@, i as nat),
                     Self::packets_are_valid_messages(packets@),
+                  decreases
+                    ack_state.un_acked.len() - i
                 {
                     let ghost packets0_view = packets@;
 
@@ -552,7 +554,7 @@ impl CSingleDelivery {
         }
 
         while dst_i < dests.len()
-        invariant
+          invariant
             self.valid(),   // Everybody hates having to carry everything through here. :v(
             dests@.map_values(|ep: EndPoint| ep@).to_set() == self.send_state.epmap@.dom(), // NOTE: hard to figure this one out: this comes from postcondition of .keys(). Losing while context extra sad here because it was very painful to reconstruct.
             src.abstractable(),
@@ -562,6 +564,8 @@ impl CSingleDelivery {
             packets@.map_values(|p: CPacket| p@).to_set() ==
                 self@.un_acked_messages_for_dests(src@, dests@.subrange(0, dst_i as int).map_values(|ep: EndPoint| ep@).to_set()),
             Self::packets_are_valid_messages(packets@),
+          decreases
+            dests.len() - dst_i
         {
             let ghost packets0_view = packets@;
 

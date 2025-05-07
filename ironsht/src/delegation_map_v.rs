@@ -233,6 +233,8 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
                 deleted_set == old(self)@.subrange(start as int, start as int + deleted as int).to_set(),
                 deleted_set.len() == deleted,
                 old(self)@.to_set() == self@.to_set() + deleted_set,
+            decreases
+                end - start - deleted,
         {
             let ghost mut old_deleted_set;
             let ghost mut old_deleted_seq;
@@ -299,6 +301,8 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
             invariant
                 0 <= index <= self@.len(),
                 forall |i| 0 <= i < index ==> (#[trigger] self@.index(i).cmp_spec(k)).lt()
+            decreases
+               self@.len() - index
         {
             index = index + 1;
         }
@@ -437,6 +441,8 @@ pub fn vec_erase<A>(v: &mut Vec<A>, start: usize, end: usize)
             v@.len() == old(v)@.len() - deleted,
             0 <= deleted <= end - start,
             v@ == old(v)@.subrange(0, start as int) + old(v)@.subrange(start as int + deleted as int, old(v)@.len() as int),
+        decreases
+            end - start - deleted
     {
         v.remove(start);
         deleted = deleted + 1;
@@ -539,6 +545,7 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
         let mut i = 0;
         while i < self.keys.len()
             invariant forall |j| 0 <= j < i ==> self.keys@[j] != k,
+            decreases self.keys@.len() - i
         {
             //println!("Loop {} of find_key", i);
             if self.keys.index(i).cmp(&k).is_eq() {
@@ -571,8 +578,11 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
         while i <= hi
             invariant 
                 lo <= i,
+                self.keys@.len() <= usize::MAX,
                 hi < self.keys@.len() as usize == self.vals@.len(),
                 forall |j| #![auto] lo <= j < i ==> self.vals@[j]@ == v@,
+            decreases
+                self.keys@.len() - i
         {
             let eq = do_end_points_match(&self.vals[i], v);
             if  !eq {
@@ -788,6 +798,8 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
              || (i < self.keys@.len() &&
                  !iter.geq_K(self.keys@.index(i as int)) &&
                  forall |j:nat| j < i ==> iter.geq_K(#[trigger]self.keys@.index(j as int))),
+            decreases
+                self.keys@.len() - i
         {
             if iter.lt(&KeyIterator::new(self.keys.index(i))) {
                 // Reached a key that's too large
@@ -884,6 +896,8 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
                 self.valid(),
                 0 <= start <= self.keys@.len(),
                 forall |j| #![auto] 0 <= j < start ==> lo.above(self.keys@.index(j))
+            decreases
+                self.keys@.len() - start
         {
             start = start + 1;
         }
@@ -895,6 +909,8 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
                 self.valid(),
                 start <= end <= self.keys@.len(),
                 forall |j| #![auto] start <= j < end ==> hi.above(self.keys@[j])
+            decreases
+                self.keys@.len() - end
         {
             end = end + 1;
         }

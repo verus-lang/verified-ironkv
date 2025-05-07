@@ -386,6 +386,8 @@ ensures
             send_log_entries_reflect_packets(net_events, cpackets@.subrange(0, i as int)),
             only_sent_marshalable_data(net_events),
             forall |i| 0 <= i < net_events.len() ==> net_events[i] is Send,
+        decreases
+            cpackets.len() - i
     {
         let cpacket: &CPacket = &cpackets[i];
         let (ok, Ghost(net_event)) = send_packet(cpacket, netc);

@@ -109,6 +109,8 @@ verus! {
               invariant
                 (0 < idx <= v.len()),
                 (forall |i: int, j: int| 0 <= i && i + 1 < idx && j == i+1 ==> #[trigger] ckeykvlt(v@[i], v@[j])),
+              decreases
+                v.len() - idx
             {
                 if v[idx - 1].k.ukey >= v[idx].k.ukey {
                     assert(!ckeykvlt(v@[idx as int-1], v@[idx as int]));

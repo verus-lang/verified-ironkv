@@ -67,6 +67,8 @@ impl CAckState {
                 i <= self.un_acked.len(),
                 un_acked@.len() == i as nat,
                 forall |j: int| 0 <= j < i as nat ==> #[trigger] (un_acked@[j]@) == self.un_acked@[j]@
+            decreases
+                self.un_acked.len() - i
         {
             un_acked.push(self.un_acked[i].clone_up_to_view());
             i = i + 1;
@@ -171,7 +173,7 @@ impl CAckState {
                     true
                 },
             })
-        invariant
+          invariant
             self.valid(dst),
             self == old(self),
             i <= self.un_acked.len(),
@@ -181,6 +183,8 @@ impl CAckState {
             truncate_un_ack_list(abstractify_cmessage_seq(self.un_acked@.skip(i as int)), seqno_acked as nat)
                 == truncate_un_ack_list(abstractify_cmessage_seq(old(self).un_acked@), seqno_acked as nat),
             self.num_packets_acked + i <= seqno_acked,
+          decreases
+            self.un_acked.len() - i
         {
             assert( self.un_acked@.skip(i as int).skip(1) =~= self.un_acked@.skip((i + 1) as int) );
             i = i + 1;
