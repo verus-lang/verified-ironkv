@@ -125,8 +125,7 @@ impl CKeyHashMap {
         }
         res
     }
-    #[verifier(external_body)]
-    pub broadcast proof fn lemma_to_vec(self)
+    pub axiom fn lemma_to_vec(self)
       ensures
         #![trigger self.spec_to_vec()]
         Self::spec_from_vec(self.spec_to_vec()) == self,
@@ -138,8 +137,7 @@ impl CKeyHashMap {
              let (k, v) = self.spec_to_vec()[i]@;
              self@.contains_pair(k, v)
          });
-    #[verifier(external_body)]
-    pub proof fn lemma_to_vec_view(self, other: Self)
+    pub axiom fn lemma_to_vec_view(self, other: Self)
       ensures
         (self@ == other@ <==> self.spec_to_vec()@ == other.spec_to_vec()@)
         && (self@ == other@ <==> (
@@ -147,8 +145,7 @@ impl CKeyHashMap {
                 forall |i: int| #![auto] 0 <= i < self.spec_to_vec().len() ==>
                 self.spec_to_vec()[i]@ == other.spec_to_vec()[i]@
         ));
-    #[verifier(external_body)]
-    pub broadcast proof fn lemma_from_vec(v: Vec<CKeyKV>)
+    pub axiom fn lemma_from_vec(v: Vec<CKeyKV>)
       ensures
         #![trigger Self::spec_from_vec(v)]
         spec_sorted_keys(v) ==> Self::spec_from_vec(v).spec_to_vec() == v;
