@@ -345,13 +345,13 @@ impl<K: KeyTrait + VerusClone> KeyIterator<K> {
 
     #[verifier(when_used_as_spec(end_spec))]
     pub fn end() -> (s: Self)
-        ensures s.k.is_None()
+        ensures s.k is None
     {
         KeyIterator { k: None }
     }
 
     pub open spec fn is_end_spec(&self) -> bool {
-        self.k.is_None()
+        self.k is None
     }
 
     #[verifier(when_used_as_spec(is_end_spec))]
@@ -364,7 +364,7 @@ impl<K: KeyTrait + VerusClone> KeyIterator<K> {
     pub open spec fn get_spec(&self) -> &K
         recommends self.k.is_some(),
     {
-        &self.k.get_Some_0()
+        &self.k->0
     }
 
     #[verifier(when_used_as_spec(get_spec))]
@@ -404,7 +404,7 @@ impl<K: KeyTrait + VerusClone> KeyIterator<K> {
 
     // Ivy calls this `done`
     spec fn above_spec(&self, k: K) -> bool {
-        self.k.is_None() || k.cmp_spec(self.k.get_Some_0()).lt()
+        self.k is None || k.cmp_spec(self.k->0).lt()
     }
 
     // Is this iterator strictly above the supplied value?
@@ -753,8 +753,8 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
         (glb == iter || glb.lt_spec(iter)) &&
         (forall|k| KeyIterator::new_spec(k) != glb && #[trigger] self@.contains_key(k) && iter.above(k) ==> glb.above(k)) &&
         (!iter.is_end_spec() ==>
-            glb.k.is_Some() &&
-            self@.contains_key(glb.k.get_Some_0()) &&
+            glb.k is Some &&
+            self@.contains_key(glb.k->0) &&
             // There are no keys in the interval (glb, hi), and iter falls into that gap
             (exists|hi| #[trigger] self.gap(glb, hi) && #[trigger] KeyIterator::between(glb, iter, hi)))
     }

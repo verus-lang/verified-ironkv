@@ -109,11 +109,11 @@ impl CMessage {
   ensures
       match value {
           Some(vec) => {
-              &&& out.is_Some()
+              &&& out is Some
               &&& out.unwrap()@ == vec@
           }
           None => {
-              &&& out.is_None()
+              &&& out is None
           }
       }
   {

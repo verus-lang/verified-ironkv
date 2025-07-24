@@ -87,8 +87,8 @@ impl<K: KeyTrait + VerusClone> KeyIterator<K> {
     }
 
     pub open spec fn lt_spec(self, other: Self) -> bool {
-        (!self.k.is_None() && other.k.is_None())
-      || (!self.k.is_None() && !other.k.is_None() && self.k.get_Some_0().cmp_spec(other.k.get_Some_0()).lt())
+        (!(self.k is None) && other.k is None)
+      || (!(self.k is None) && !(other.k is None) && self.k->0.cmp_spec(other.k->0).lt())
     }
 
     // TODO: Use the name `spec_ge` instead of `geq_spec` to enable Verus magic overloading

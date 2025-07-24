@@ -336,7 +336,7 @@ impl HostState {
         let abstract_end_points = parse_args(abstractify_args(*args));
         match rc {
             None => {
-                ||| abstract_end_points.is_None()
+                ||| abstract_end_points is None
                 ||| abstract_end_points.unwrap().len()==0
                 ||| !seq_is_unique(abstract_end_points.unwrap())
             },
@@ -376,7 +376,7 @@ impl HostState {
         };
 
         proof {
-            assert(!(abstract_end_points@.is_None() || abstract_end_points@.unwrap().len()==0));
+            assert(!(abstract_end_points@ is None || abstract_end_points@.unwrap().len()==0));
             assert( abstract_end_points@.is_some() );
             assert( abstract_end_points@.unwrap().len() > 0 );
             assert( constants@.root_identity == abstract_end_points@.unwrap()[0] );
