@@ -1,6 +1,4 @@
 #![verus::trusted]
-use builtin::*;
-use builtin_macros::*;
 
 use crate::environment_t::*;
 use vstd::prelude::*;

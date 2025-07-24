@@ -4,8 +4,6 @@
 
 // TODO FIXME Probably need a better name for this
 
-use builtin::*;
-use builtin_macros::*;
 use vstd::bytes::*;
 use vstd::map::*;
 use vstd::modes::*;

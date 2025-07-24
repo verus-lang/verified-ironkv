@@ -1,8 +1,6 @@
 //! Translates file Distributed/Impl/SHT/Delegations.i.dfy
 
-use builtin_macros::*;
 
-use builtin::*;
 
 use vstd::{
     map::*, modes::*, seq::*, seq_lib::*, set::*, set_lib::*,

@@ -2,8 +2,6 @@
 //!
 //! Not really a translation so much as a re-implementation
 
-use builtin::*;
-use builtin_macros::*;
 use vstd::bytes::*;
 use vstd::map::*;
 use vstd::modes::*;
@@ -1209,7 +1207,7 @@ macro_rules! derive_marshalable_for_struct {
       $(,)?
     }
   } => {
-    ::builtin_macros::verus! {
+    ::vstd::prelude::verus! {
       impl $(< $($poly: Marshalable),* >)? Marshalable for $newstruct $(< $($poly),* >)? {
         open spec fn view_equal(&self, other: &Self) -> bool {
           $(
@@ -1352,7 +1350,7 @@ macro_rules! define_struct_and_derive_marshalable {
   } => {
 
     // We first re-generate the struct definition itself, so that the struct exists
-    ::builtin_macros::verus! {
+    ::vstd::prelude::verus! {
     $( #[$attr] )*
     $pub
     struct $newstruct $(< $($poly : Marshalable),+ >)? {
@@ -1391,7 +1389,7 @@ macro_rules! derive_marshalable_for_enum {
     }
     $( [rlimit attr = $rlimitattr:meta] )?
   } => {
-    ::builtin_macros::verus! {
+    ::vstd::prelude::verus! {
       impl $(< $($poly : Marshalable),+ >)? Marshalable for $newenum $(< $($poly),+ >)? {
         open spec fn view_equal(&self, other: &Self) -> bool {
           &&& match (self, other) {
@@ -1631,7 +1629,7 @@ macro_rules! define_enum_and_derive_marshalable {
   } => {
 
     // We first re-generate the enum definition itself, so that the enum exists
-    ::builtin_macros::verus! {
+    ::vstd::prelude::verus! {
     $( #[$attr] )*
     $pub
     enum $newenum $(< $($poly : Marshalable),+ >)? {
@@ -1670,7 +1668,7 @@ macro_rules! marshalable_by_bijection {
     }
     =>
     {
-        ::builtin_macros::verus! {
+        ::vstd::prelude::verus! {
             impl $type {
                  pub open spec fn forward_bijection_for_view_equality_do_not_use_for_anything_else($self: Self) -> $marshalable {
                   $forward

@@ -15,8 +15,6 @@ use crate::net_sht_v::*;
 use crate::network_t::*;
 use crate::single_message_t::*;
 use crate::verus_extra::set_lib_ext_v::*;
-use builtin::*;
-use builtin_macros::*;
 use vstd::map::*;
 use vstd::prelude::*;
 use vstd::seq_lib::*;

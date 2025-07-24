@@ -1,8 +1,7 @@
 #![verus::trusted]
 //! Translates file Distributed/Protocol/SHT/Message.i.dfy
-use builtin::*;
-use builtin_macros::*;
 
+use vstd::prelude::*;
 use crate::abstract_end_point_t::*;
 use crate::app_interface_t::*;
 use crate::keys_t::*;

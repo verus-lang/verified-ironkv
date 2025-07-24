@@ -1,9 +1,8 @@
 #![verus::trusted]
 //! Translates Distributed/Protocol/SHT/Network.i.dfy
 
-use builtin::*;
-use builtin_macros::*;
 use vstd::pervasive::*;
+use vstd::prelude::*;
 
 use crate::abstract_end_point_t::*;
 use crate::message_t::*;

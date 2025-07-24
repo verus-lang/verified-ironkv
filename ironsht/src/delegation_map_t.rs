@@ -1,8 +1,7 @@
 #![verus::trusted]
 //! Translates file Protocol/SHT/Delegations.i.dfy
 
-use builtin::*;
-use builtin_macros::*;
+use vstd::prelude::*;
 use vstd::map::*;
 use vstd::modes::*;
 use vstd::multiset::*;

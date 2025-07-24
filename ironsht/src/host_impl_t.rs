@@ -7,8 +7,6 @@
 //! to module refinement)
 //!
 //! ConcreteConfiguration is not translated.
-use builtin::*;
-use builtin_macros::*;
 
 use crate::abstract_end_point_t::*;
 use crate::abstract_service_t::*;

@@ -1,5 +1,6 @@
 #![verus::trusted]
 
+use vstd::prelude::*;
 use crate::keys_t::*;
 use vstd::map::*;
 use vstd::modes::*;
@@ -8,8 +9,6 @@ use vstd::seq::*;
 use vstd::set::*;
 
 use vstd::pervasive::*;
-use builtin::*;
-use builtin_macros::*;
 
 verus! {
 

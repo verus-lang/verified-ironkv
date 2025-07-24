@@ -4,8 +4,6 @@ use vstd::seq_lib::*;
 use vstd::set::*;
 use vstd::set_lib::*;
 
-use builtin::*;
-use builtin_macros::*;
 use crate::abstract_end_point_t::*;
 use crate::args_t::*;
 use crate::io_t::*;

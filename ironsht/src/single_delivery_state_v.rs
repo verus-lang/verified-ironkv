@@ -17,8 +17,6 @@ use crate::message_t::*;
 use crate::network_t::Packet;
 use crate::single_message_t::SingleMessage;
 use crate::verus_extra::set_lib_ext_v::flatten_sets_spec;
-use builtin::*;
-use builtin_macros::*;
 use vstd::map::*;
 use vstd::prelude::*;
 use vstd::seq_lib::*;

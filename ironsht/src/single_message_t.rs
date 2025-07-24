@@ -4,10 +4,9 @@ use vstd::modes::*;
 use vstd::multiset::*;
 use vstd::seq::*;
 use vstd::set::*;
+use vstd::prelude::*;
 
 use vstd::pervasive::*;
-use builtin::*;
-use builtin_macros::*;
 
 use crate::abstract_end_point_t::*;
 

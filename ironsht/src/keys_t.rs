@@ -1,6 +1,4 @@
 #![verus::trusted]
-use builtin::*;
-use builtin_macros::*;
 use vstd::map::*;
 use vstd::modes::*;
 use vstd::multiset::*;

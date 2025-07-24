@@ -1,6 +1,4 @@
 #![verus::trusted]
-use builtin::*;
-use builtin_macros::*;
 use vstd::prelude::*;
 
 use crate::abstract_end_point_t::*;
