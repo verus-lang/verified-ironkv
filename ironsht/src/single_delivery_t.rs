@@ -13,7 +13,7 @@ use crate::abstract_parameters_t::*;
 use crate::message_t::*;
 use crate::network_t::*;
 use crate::single_message_t::*;
-use crate::verus_extra::set_lib_ext_v::{flatten_sets, flatten_sets_spec};
+use crate::verus_extra::set_lib_ext_v::flatten_sets;
 
 verus! {
 

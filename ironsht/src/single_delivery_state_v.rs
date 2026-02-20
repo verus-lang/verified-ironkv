@@ -16,7 +16,6 @@ use crate::marshal_v::Marshalable;
 use crate::message_t::*;
 use crate::network_t::Packet;
 use crate::single_message_t::SingleMessage;
-use crate::verus_extra::set_lib_ext_v::flatten_sets_spec;
 use vstd::map::*;
 use vstd::prelude::*;
 use vstd::seq_lib::*;
@@ -173,7 +172,7 @@ impl CAckState {
             })
           invariant
             self.valid(dst),
-            self == old(self),
+            *self == *old(self),
             i <= self.un_acked.len(),
             i < self.un_acked.len() ==> self.un_acked[i as int].arrow_Message_seqno() <= seqno_acked + 1,
             forall |j: int| #![auto] 0 <= j < i ==> self.un_acked[j].arrow_Message_seqno() <= seqno_acked,
