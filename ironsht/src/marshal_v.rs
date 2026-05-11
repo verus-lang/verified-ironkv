@@ -43,9 +43,9 @@ pub trait Marshalable : Sized {
   exec fn serialize(&self, data: &mut Vec<u8>)
     requires self.is_marshalable()
     ensures
-      data@.len() >= old(data).len(),
-      data@.subrange(0, old(data)@.len() as int) == old(data)@,
-      data@.subrange(old(data)@.len() as int, data@.len() as int) == self.ghost_serialize();
+      final(data)@.len() >= old(data).len(),
+      final(data)@.subrange(0, old(data)@.len() as int) == old(data)@,
+      final(data)@.subrange(old(data)@.len() as int, final(data)@.len() as int) == self.ghost_serialize();
   exec fn deserialize(data: &Vec<u8>, start: usize) -> (res: Option<(Self, usize)>)
     ensures match res {
       Some((x, end)) => {

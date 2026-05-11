@@ -438,11 +438,11 @@ impl HostState {
             outbound_packet_seq_is_valid(packets@),
             outbound_packet_seq_has_correct_srcs(packets@, old(netc).my_end_point()),
         ensures
-            netc.my_end_point() == old(netc).my_end_point(),
+            final(netc).my_end_point() == old(netc).my_end_point(),
             ({
                 let (ok, Ghost(net_events), Ghost(ios)) = rc;
                 {
-                    &&& netc.ok() <==> ok
+                    &&& final(netc).ok() <==> ok
                     &&& ok ==> {
                         &&& all_ios_are_sends(ios)
                         &&& (forall |i: int| 0 <= i && i < net_events.len() ==> net_events[i] is Send)
@@ -454,7 +454,7 @@ impl HostState {
                         &&& no_invalid_sends(ios)
                         &&& raw_io_consistent_with_spec_io(net_events, ios)
                         &&& only_sent_marshalable_data(net_events)
-                        &&& netc.history() == old(netc).history() + net_events
+                        &&& final(netc).history() == old(netc).history() + net_events
                     }
                 }
             })
@@ -524,11 +524,11 @@ impl HostState {
             outbound_packet_seq_is_valid(packets@),
             outbound_packet_seq_has_correct_srcs(packets@, old(netc).my_end_point()),
         ensures
-            netc.my_end_point() == old(netc).my_end_point(),
+            final(netc).my_end_point() == old(netc).my_end_point(),
             ({
                 let (ok, Ghost(net_events), Ghost(ios)) = rc;
                 {
-                    &&& netc.ok() <==> ok
+                    &&& final(netc).ok() <==> ok
                     &&& ok ==> {
                         &&& all_ios_are_sends(ios)
                         &&& (forall |i: int| 0 <= i && i < net_events.len() ==> net_events[i] is Send)
@@ -540,7 +540,7 @@ impl HostState {
                         &&& no_invalid_sends(ios)
                         &&& raw_io_consistent_with_spec_io(net_events, ios)
                         &&& only_sent_marshalable_data(net_events)
-                        &&& netc.history() == old(netc).history() + net_events
+                        &&& final(netc).history() == old(netc).history() + net_events
                     }
                 }
             })
@@ -553,7 +553,7 @@ impl HostState {
     requires
         Self::next_requires(*old(self), *old(netc)),
     ensures
-        Self::next_ensures(*old(self), *old(netc), *self, *netc, rc),
+        Self::next_ensures(*old(self), *old(netc), *final(self), *final(netc), rc),
     {
         let ghost old_self: HostState = *self;
         let (rr, net_event) = receive_with_demarshal(netc, &self.constants.me);
@@ -672,19 +672,19 @@ impl HostState {
         abstractify_cpacket_to_lsht_packet(cpacket) == abstractify_net_packet_to_lsht_packet(receive_event.arrow_Receive_r()),
     ensures ({
         let (ok, Ghost(event_results), Ghost(ios)) = rc;
-        &&& self.invariants(&netc.my_end_point())
-        &&& self@.constants == old(self)@.constants
-        &&& ok == netc.ok()
+        &&& final(self).invariants(&final(netc).my_end_point())
+        &&& final(self)@.constants == old(self)@.constants
+        &&& ok == final(netc).ok()
         // Because all `net_events` are sends, the condition "even if ok is false, if we sent at least one
         // packet..." is implied by "even if ok is false, if `net_events` has length > 0...".
-        &&& (ok || event_results.sends.len() > 0) ==> netc.history() == old_netc_history + event_results.ios
+        &&& (ok || event_results.sends.len() > 0) ==> final(netc).history() == old_netc_history + event_results.ios
         // There's supposed to be a distinction between the ios that we intended to do and the
         // event_seq that we actually did. (See EventResult definition.) But in the interest of
         // mimicking Dafny Ironfleet, we make no such distinction.
         &&& event_results.ios == event_results.event_seq()
         &&& event_results.well_typed_events()
         &&& ok ==> {
-            &&& host_protocol_t::receive_packet_next(old(self)@, self@, ios)
+            &&& host_protocol_t::receive_packet_next(old(self)@, final(self)@, ios)
             &&& raw_io_consistent_with_spec_io(event_results.ios, ios)
             &&& no_invalid_sends(ios)
             }
@@ -770,10 +770,10 @@ impl HostState {
     ensures ({
         let (sent_packets, ack) = rc;
         &&& outbound_packet_seq_is_valid(sent_packets@)
-        &&& receive_packet(old(self)@, self@, cpacket@, abstractify_seq_of_cpackets_to_set_of_sht_packets(sent_packets@), ack@@)
+        &&& receive_packet(old(self)@, final(self)@, cpacket@, abstractify_seq_of_cpackets_to_set_of_sht_packets(sent_packets@), ack@@)
         // The Dafny Ironfleet "common preconditions" take an explicit cpacket, but we need to talk
         // about
-        &&& self.host_state_common_postconditions(*old(self), cpacket, sent_packets@)
+        &&& final(self).host_state_common_postconditions(*old(self), cpacket, sent_packets@)
         })
     {
         let mut sent_packets = Vec::new();
@@ -1068,7 +1068,7 @@ impl HostState {
     /// cannot be passed separately.
     fn host_model_next_get_request(&mut self) -> (sent_packets: Vec<CPacket>)
         requires old(self).next_get_request_preconditions()
-        ensures  self.next_get_request_postconditions(*old(self), sent_packets@)
+        ensures  final(self).next_get_request_postconditions(*old(self), sent_packets@)
     {
         let cpacket: &CPacket = &self.received_packet.as_ref().unwrap();
         let ghost pkt: Packet = cpacket@;
@@ -1171,7 +1171,7 @@ impl HostState {
     // Implements Impl/SHT/HostModel.i.dfy HostModelNextSetRequest
     fn host_model_next_set_request(&mut self) -> (sent_packets: Vec<CPacket>)
         requires old(self).next_set_request_preconditions()
-        ensures  self.next_set_request_postconditions(*old(self), sent_packets@)
+        ensures  final(self).next_set_request_postconditions(*old(self), sent_packets@)
     {
         proof { self.delegation_map.valid_implies_complete(); }
         let cpacket: &CPacket = &self.received_packet.as_ref().unwrap();
@@ -1379,7 +1379,7 @@ impl HostState {
         requires
             old(self).next_delegate_preconditions(),
         ensures
-            self.next_delegate_postconditions(*old(self), sent_packets@),
+            final(self).next_delegate_postconditions(*old(self), sent_packets@),
     {
         let sent_packets = vec![];
         proof { self.delegation_map.valid_implies_complete(); };
@@ -1440,7 +1440,7 @@ impl HostState {
         requires
             old(self).next_shard_preconditions(),
         ensures
-            self.next_shard_postconditions(*old(self), sent_packets@),
+            final(self).next_shard_postconditions(*old(self), sent_packets@),
     {
         proof { self.delegation_map.valid_implies_complete(); };
         let cpacket: &CPacket = &self.received_packet.as_ref().unwrap();
@@ -1582,12 +1582,12 @@ impl HostState {
             match old(self).received_packet {
                 Some(cpacket) => {
                     &&& cpacket_seq_is_abstractable(sent_packets@)
-                    &&& self.host_state_common_postconditions(*old(self), (*old(self)).received_packet.unwrap(),
+                    &&& final(self).host_state_common_postconditions(*old(self), (*old(self)).received_packet.unwrap(),
                                                             sent_packets@)
                     &&& {
-                         ||| process_message(old(self)@, self@,
+                         ||| process_message(old(self)@, final(self)@,
                                abstractify_seq_of_cpackets_to_set_of_sht_packets(sent_packets@))
-                         ||| Self::host_ignoring_unparseable(old(self)@, self@,
+                         ||| Self::host_ignoring_unparseable(old(self)@, final(self)@,
                                abstractify_seq_of_cpackets_to_set_of_sht_packets(sent_packets@))
                         }
                 },
@@ -1629,15 +1629,15 @@ impl HostState {
         Self::next_requires(*old(self), *old(netc)),
     ensures ({
         let (ok, res) = rc;
-        &&& ok == netc.ok()
-        &&& (*self).invariants(&netc.my_end_point())
+        &&& ok == final(netc).ok()
+        &&& (*final(self)).invariants(&final(netc).my_end_point())
         &&& ok ==> {
-            ||| process_received_packet_next((*old(self))@, (*self)@, abstractify_raw_log_to_ios(res@.ios))
-            ||| ignore_nonsensical_delegation_packet((*old(self))@, (*self)@, abstractify_raw_log_to_ios(res@.ios))
+            ||| process_received_packet_next((*old(self))@, (*final(self))@, abstractify_raw_log_to_ios(res@.ios))
+            ||| ignore_nonsensical_delegation_packet((*old(self))@, (*final(self))@, abstractify_raw_log_to_ios(res@.ios))
             }
-        &&& self.constants == (*old(self)).constants
+        &&& final(self).constants == (*old(self)).constants
         &&& ok ==> res@.event_seq() == res@.ios
-        &&& ok || (res@.sends.len()>0) ==> (*netc).history() == (*old(netc)).history() + res@.event_seq()
+        &&& ok || (res@.sends.len()>0) ==> (*final(netc)).history() == (*old(netc)).history() + res@.event_seq()
         &&& res@.well_typed_events()
         &&& no_invalid_sends(abstractify_raw_log_to_ios(res@.ios))
         })
@@ -1723,7 +1723,7 @@ impl HostState {
     requires
         Self::next_requires(*old(self), *old(netc)),
     ensures
-        Self::next_ensures(*old(self), *old(netc), *self, *netc, rc),
+        Self::next_ensures(*old(self), *old(netc), *final(self), *final(netc), rc),
     {
         // HostModel.HostModelSpontaneouslyRetransmit
         // SingleDeliveryModel.RetransmitUnAckedPackets
@@ -1781,7 +1781,7 @@ impl HostState {
     requires
         Self::next_requires(*old(self), *old(netc)),
     ensures
-        Self::next_ensures(*old(self), *old(netc), *self, *netc, rc),
+        Self::next_ensures(*old(self), *old(netc), *final(self), *final(netc), rc),
     {
         proof { old(self).delegation_map.valid_implies_complete(); }
         let cur_action_index = self.next_action_index;

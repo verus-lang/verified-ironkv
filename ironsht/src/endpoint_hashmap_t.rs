@@ -35,7 +35,7 @@ impl<V> HashMap<V>
 
     #[verifier(external_body)]
     pub fn insert(&mut self, key: &EndPoint, value: V)
-      ensures self@ == old(self)@.insert(key@, value)
+      ensures final(self)@ == old(self)@.insert(key@, value)
     {
       let key_clone: EndPoint = key.clone_up_to_view();
       self.m.insert(key_clone, value);
@@ -85,7 +85,7 @@ impl<V> HashMap<V>
     //TODO: replace call sites with insert
     pub fn put(&mut self, key: &EndPoint, value: V)
     ensures
-        Self::put_spec(old(self)@, self@, key@, value),
+        Self::put_spec(old(self)@, final(self)@, key@, value),
     {
         self.insert(key, value);
     }
@@ -102,7 +102,7 @@ impl<V> HashMap<V>
     #[verifier(external_body)]
     pub fn swap<'a>(&'a mut self, key: &EndPoint, updated_value: &'a mut V, default_value: V)
     ensures
-        Self::swap_spec(old(self)@, self@, key@, *old(updated_value), *updated_value, default_value),
+        Self::swap_spec(old(self)@, final(self)@, key@, *old(updated_value), *final(updated_value), default_value),
     {
         match self.m.get_mut(key) {
             Some(v) => core::mem::swap(v, updated_value),

@@ -140,7 +140,7 @@ impl HostState {
         requires
             Self::next_requires(*old(self), *old(netc)),
         ensures
-            Self::next_ensures(*old(self), *old(netc), *self, *netc, rc),
+            Self::next_ensures(*old(self), *old(netc), *final(self), *final(netc), rc),
     {
         self.real_next_impl(netc)
     }

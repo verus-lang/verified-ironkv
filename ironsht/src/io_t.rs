@@ -226,8 +226,8 @@ impl NetClient {
         requires
             from_trusted_code()
         ensures
-            self.state() is Receiving,
-            self.my_end_point() == old(self).my_end_point()
+            final(self).state() is Receiving,
+            final(self).my_end_point() == old(self).my_end_point()
     {
         self.state = Ghost(State::Receiving);
     }
@@ -286,8 +286,8 @@ impl NetClient {
         requires
               old(self).state() is Receiving
         ensures ({
-            &&& self.state() is Sending
-            &&& self.history() == old(self).history() + seq![LIoOp::ReadClock{t: time as int}]
+            &&& final(self).state() is Sending
+            &&& final(self).history() == old(self).history() + seq![LIoOp::ReadClock{t: time as int}]
         })
     {
         let time: u64 = self.get_time_internal();
@@ -339,25 +339,25 @@ impl NetClient {
         requires
           old(self).state() is Receiving
         ensures
-          self.my_end_point() == old(self).my_end_point(),
+          final(self).my_end_point() == old(self).my_end_point(),
           match result {
             NetcReceiveResult::Received{sender, message} => {
-                &&& self.state() is Receiving
+                &&& final(self).state() is Receiving
                 &&& sender.abstractable()
-                &&& self.history() == old(self).history() + seq![
+                &&& final(self).history() == old(self).history() + seq![
                     LIoOp::Receive{
                         r: LPacket{
-                            dst: self.my_end_point(),
+                            dst: final(self).my_end_point(),
                             src: sender@,
                             msg: message@}
                     }]
             }
             NetcReceiveResult::TimedOut{} => {
-                &&& self.state() is Sending
-                &&& self.history() == old(self).history() + seq![LIoOp/*TODO(verus) fix name when qpath fix*/::TimeoutReceive{}]
+                &&& final(self).state() is Sending
+                &&& final(self).history() == old(self).history() + seq![LIoOp/*TODO(verus) fix name when qpath fix*/::TimeoutReceive{}]
             }
             NetcReceiveResult::Error{} => {
-                self.state() is Error
+                final(self).state() is Error
             }
         }
     {
@@ -393,7 +393,7 @@ impl NetClient {
     #[verifier(external_body)]
     pub fn send_internal_wrapper(&mut self, remote: &EndPoint, message: &Vec<u8>) -> (result: Result<(), IronfleetIOError>)
     ensures
-        *self == *old(self),
+        *final(self) == *old(self),
     {
         unsafe { self.send_internal(remote, message) }
     }
@@ -402,10 +402,10 @@ impl NetClient {
         requires
             !(old(self).state() is Error)
         ensures
-            self.my_end_point() == old(self).my_end_point(),
-            self.state() is Error <==> result is Err,
-            result is Ok ==> self.state() is Sending,
-            result is Ok ==> self.history() == old(self).history() + seq![LIoOp::Send{s: LPacket{dst: recipient@, src: self.my_end_point(), msg: message@}}],
+            final(self).my_end_point() == old(self).my_end_point(),
+            final(self).state() is Error <==> result is Err,
+            result is Ok ==> final(self).state() is Sending,
+            result is Ok ==> final(self).history() == old(self).history() + seq![LIoOp::Send{s: LPacket{dst: recipient@, src: final(self).my_end_point(), msg: message@}}],
     {
         let result: Result<(), IronfleetIOError> = self.send_internal_wrapper(recipient, message);
         match result {

@@ -153,10 +153,10 @@ impl CAckState {
         old(self).valid(dst),
         old(self).num_packets_acked <= seqno_acked,
     ensures
-        self.valid(dst),
-        abstractify_cmessage_seq(self.un_acked@) == truncate_un_ack_list(abstractify_cmessage_seq(old(self).un_acked@), seqno_acked as nat),
-        self.un_acked@.len() > 0 ==> self.un_acked[0]@.arrow_Message_seqno() == seqno_acked + 1,
-        self.num_packets_acked == seqno_acked,
+        final(self).valid(dst),
+        abstractify_cmessage_seq(final(self).un_acked@) == truncate_un_ack_list(abstractify_cmessage_seq(old(self).un_acked@), seqno_acked as nat),
+        final(self).un_acked@.len() > 0 ==> final(self).un_acked[0]@.arrow_Message_seqno() == seqno_acked + 1,
+        final(self).num_packets_acked == seqno_acked,
     {
         let mut i: usize = 0;
         assert( self.un_acked@.skip(0 as int) =~= self.un_acked@ );
@@ -225,8 +225,8 @@ impl CTombstoneTable {
         old(self).abstractable(),
         src@.valid_physical_address(),
     ensures
-        self@ =~= old(self)@.insert(src@, last_seqno as nat),
-        self.abstractable(),
+        final(self)@ =~= old(self)@.insert(src@, last_seqno as nat),
+        final(self).abstractable(),
     {
         self.epmap.insert(src, last_seqno);
         assert( forall |k: AbstractEndPoint| #[trigger] self@.contains_key(k) ==> old(self)@.contains_key(k) || k == src@ );
@@ -285,14 +285,14 @@ impl CSendState {
         old(self).valid(),
         src.abstractable(),
     ensures
-        HashMap::swap_spec(old(self).epmap@, self.epmap@, src@, *old(ack_state), *ack_state, default),
+        HashMap::swap_spec(old(self).epmap@, final(self).epmap@, src@, *old(ack_state), *final(ack_state), default),
     {
         self.epmap.swap(src, ack_state, default)
     }
 
     pub fn put(&mut self, src: &EndPoint, value: CAckState)
     ensures
-        HashMap::put_spec(old(self).epmap@, self.epmap@, src@, value),
+        HashMap::put_spec(old(self).epmap@, final(self).epmap@, src@, value),
     {
         self.epmap.put(src, value)
     }

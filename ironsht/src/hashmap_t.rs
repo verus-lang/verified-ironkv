@@ -49,7 +49,7 @@ impl CKeyHashMap {
 
     #[verifier(external_body)]
     pub fn insert(&mut self, key: CKey, value: Vec<u8>)
-      ensures self@ == old(self)@.insert(key, value@)
+      ensures final(self)@ == old(self)@.insert(key, value@)
     {
         //TODO: Soundness issue needs careful examination: What properties must we demand of Key
         //for this ensures to be correct? If Key has a nondeterministic hash, for example, this
@@ -59,7 +59,7 @@ impl CKeyHashMap {
 
     #[verifier(external_body)]
     pub fn remove(&mut self, key: &CKey)
-      ensures self@ == old(self)@.remove(*key)
+      ensures final(self)@ == old(self)@.remove(*key)
     {
         panic!()
     }
@@ -81,7 +81,7 @@ impl CKeyHashMap {
 
     #[verifier(external_body)]
     pub fn bulk_update(&mut self, kr: &KeyRange::<CKey>, other: &Self)
-        ensures self@ == Map::<AbstractKey, Seq<u8>>::new(
+        ensures final(self)@ == Map::<AbstractKey, Seq<u8>>::new(
             |k: AbstractKey| (old(self)@.dom().contains(k) || other@.dom().contains(k))
                              && (kr.contains(k) ==> other@.dom().contains(k)),
             |k: AbstractKey| if other@.dom().contains(k) { other@[k] } else { old(self)@[k] }
@@ -93,7 +93,7 @@ impl CKeyHashMap {
     #[verifier(external_body)]
     pub fn bulk_remove(&mut self, kr: &KeyRange::<CKey>)
     ensures
-        self@ == Map::<AbstractKey, Seq<u8>>::new(
+        final(self)@ == Map::<AbstractKey, Seq<u8>>::new(
             |k: AbstractKey| old(self)@.dom().contains(k) && !kr.contains(k),
             |k: AbstractKey| old(self)@[k])
     {

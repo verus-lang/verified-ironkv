@@ -107,11 +107,11 @@ impl CSingleDelivery {
         self.send_state@.contains_key(dst@),
         Self::packets_are_valid_messages(old(packets)@),
     ensures
-        packets@.map_values(|p: CPacket| p@).to_set() ==
+        final(packets)@.map_values(|p: CPacket| p@).to_set() ==
             old(packets)@.map_values(|p: CPacket| p@).to_set() + self@.un_acked_messages_for_dest(src@, dst@),
-        outbound_packet_seq_is_valid(packets@),
-        outbound_packet_seq_has_correct_srcs(packets@, src@),
-        Self::packets_are_valid_messages(packets@),
+        outbound_packet_seq_is_valid(final(packets)@),
+        outbound_packet_seq_has_correct_srcs(final(packets)@, src@),
+        Self::packets_are_valid_messages(final(packets)@),
     {
         proof {
             assert_sets_equal!(
@@ -203,8 +203,8 @@ impl CSingleDelivery {
         pkt.abstractable(),
         pkt.msg is Ack,
     ensures
-        self.valid(),
-        SingleDelivery::receive_ack(old(self)@, self@, pkt@, set!{}),
+        final(self).valid(),
+        SingleDelivery::receive_ack(old(self)@, final(self)@, pkt@, set!{}),
     {
         let num_packets_acked = 
             match self.send_state.get(&pkt.src) {
@@ -255,8 +255,8 @@ impl CSingleDelivery {
         pkt.abstractable(),
         pkt.msg is Message,
     ensures
-        self.valid(),
-        SingleDelivery::receive_real_packet(old(self)@, self@, pkt@),
+        final(self).valid(),
+        SingleDelivery::receive_real_packet(old(self)@, final(self)@, pkt@),
         packet_is_fresh == SingleDelivery::new_single_message(old(self)@, pkt@),
     {
         // We inlined NewSingleMessageImpl here.
@@ -346,9 +346,9 @@ impl CSingleDelivery {
         old(self).abstractable(),
         pkt.abstractable(),
     ensures
-        self.valid(),
+        final(self).valid(),
         rr.valid_ack(*pkt),
-        SingleDelivery::receive(old(self)@, self@, pkt@, rr.get_ack()@, rr.get_abstracted_ack_set()),
+        SingleDelivery::receive(old(self)@, final(self)@, pkt@, rr.get_ack()@, rr.get_abstracted_ack_set()),
         rr is FreshPacket ==> SingleDelivery::new_single_message(old(self)@, pkt@),
         rr is DuplicatePacket ==> !SingleDelivery::new_single_message(old(self)@, pkt@),
     {
@@ -400,17 +400,17 @@ impl CSingleDelivery {
             m.is_marshalable(),
             dst@.valid_physical_address(),
         ensures
-            self.valid(),
+            final(self).valid(),
             match sm {
                 Some(sm) => {
                     &&& sm.abstractable()
                     &&& sm is Message
                     &&& sm.arrow_Message_dst()@ == dst@
-                    &&& SingleDelivery::send_single_message(old(self)@, self@, m@, dst@, Some(sm@), AbstractParameters::static_params())
+                    &&& SingleDelivery::send_single_message(old(self)@, final(self)@, m@, dst@, Some(sm@), AbstractParameters::static_params())
                     &&& sm.is_marshalable()
                 },
                 None =>
-                    SingleDelivery::send_single_message(old(self)@, self@, m@, dst@, None, AbstractParameters::static_params()),
+                    SingleDelivery::send_single_message(old(self)@, final(self)@, m@, dst@, None, AbstractParameters::static_params()),
             },
             // TODO: capture the part of send_single_message when should_send == false
     {

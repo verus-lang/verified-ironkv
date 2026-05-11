@@ -152,8 +152,8 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
                  i > 0 ==> old(self)@[i as int - 1].cmp_spec(k).lt(),
                  i < old(self)@.len() - 1 ==> k.cmp_spec(old(self)@[i as int + 1]).lt(),
         ensures
-            self.valid(),
-            self@ == old(self)@.update(i as int, k),
+            final(self).valid(),
+            final(self)@ == old(self)@.update(i as int, k),
     {
         self.v.set(i, k);
         assert forall |m, n| 0 <= m < n < self@.len() implies #[trigger](self@[m].cmp_spec(self@[n]).lt()) by {
@@ -171,10 +171,10 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
             old(self).valid(),
             i < old(self)@.len(),
         ensures
-            self.valid(),
+            final(self).valid(),
             k == old(self)@.index(i as int),
-            self@ == old(self)@.remove(i as int),
-            self@.to_set() == old(self)@.to_set().remove(k),
+            final(self)@ == old(self)@.remove(i as int),
+            final(self)@.to_set() == old(self)@.to_set().remove(k),
     {
         let k = self.v.remove(i);
         proof {
@@ -200,11 +200,11 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
             old(self).valid(),
             start <= end <= old(self)@.len(),
         ensures
-            self.valid(),
-            self@ == old(self)@.subrange(0, start as int) + old(self)@.subrange(end as int, old(self)@.len() as int),
+            final(self).valid(),
+            final(self)@ == old(self)@.subrange(0, start as int) + old(self)@.subrange(end as int, old(self)@.len() as int),
             // TODO: We might want to strengthen this further to say that the two sets on the RHS
             //       are disjoint
-            old(self)@.to_set() == self@.to_set() + old(self)@.subrange(start as int, end as int).to_set(),
+            old(self)@.to_set() == final(self)@.to_set() + old(self)@.subrange(start as int, end as int).to_set(),
     {
         let mut deleted = 0;
         let ghost mut deleted_set;
@@ -287,11 +287,11 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
         requires
             old(self).valid(),
             !old(self)@.contains(k),
-        ensures self.valid(),
-            self@.len() == old(self)@.len() + 1,
-            0 <= i < self@.len(),
-            self@ == old(self)@.insert(i as int, k),
-            self@.to_set() == old(self)@.to_set().insert(k),
+        ensures final(self).valid(),
+            final(self)@.len() == old(self)@.len() + 1,
+            0 <= i < final(self)@.len(),
+            final(self)@ == old(self)@.insert(i as int, k),
+            final(self)@.to_set() == old(self)@.to_set().insert(k),
     {
         // Find the index where we should insert k
         let mut index: usize = 0;
@@ -423,8 +423,7 @@ pub fn vec_erase<A>(v: &mut Vec<A>, start: usize, end: usize)
     requires
         start <= end <= old(v).len(),
     ensures
-        true,
-        v@ == old(v)@.subrange(0, start as int) + old(v)@.subrange(end as int, old(v)@.len() as int),
+        final(v)@ == old(v)@.subrange(0, start as int) + old(v)@.subrange(end as int, old(v)@.len() as int),
 {
     let mut deleted = 0;
     proof {
@@ -692,9 +691,9 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
         requires
             old(self).valid(),
         ensures
-            self.valid(),
-            self@ == old(self)@.insert(k, v),
-            forall |lo, hi| self.gap(lo, hi) <==>
+            final(self).valid(),
+            final(self)@ == old(self)@.insert(k, v),
+            forall |lo, hi| final(self).gap(lo, hi) <==>
                             old(self).gap(lo, hi)
                         && !(lo.lt_spec(KeyIterator::new_spec(k))
                           && KeyIterator::new_spec(k).lt_spec(hi)),
@@ -870,21 +869,21 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
         requires
             old(self).valid(),
         ensures
-            self.valid(),
+            final(self).valid(),
             forall |k| {
                 let ki = KeyIterator::new_spec(k);
                 (if ki.geq_spec(*lo) && ki.lt_spec(*hi) {
-                    !(#[trigger] self@.contains_key(k))
+                    !(#[trigger] final(self)@.contains_key(k))
                 } else {
                     (old(self)@.contains_key(k) ==>
-                         self@.contains_key(k) && self@[k] == old(self)@[k])
-                    && (self@.contains_key(k) ==> old(self)@.contains_key(k))
+                         final(self)@.contains_key(k) && final(self)@[k] == old(self)@[k])
+                    && (final(self)@.contains_key(k) ==> old(self)@.contains_key(k))
                 })},
-            forall |x, y| self.gap(x, y) <==> ({
+            forall |x, y| final(self).gap(x, y) <==> ({
                          ||| old(self).gap(x, y)
                          ||| (old(self).gap(x, *lo) &&
                               old(self).gap(*hi, y) &&
-                              (hi.geq_spec(y) || hi.is_end_spec() || !self@.contains_key(*hi.get())))
+                              (hi.geq_spec(y) || hi.is_end_spec() || !final(self)@.contains_key(*hi.get())))
                         }),
     {
         // Find the point where keys are >= lo
@@ -1117,9 +1116,9 @@ impl<K: KeyTrait + VerusClone> DelegationMap<K> {
             old(self).valid(),
             dst@.valid_physical_address(),
         ensures
-            self.valid(),
-            forall |ki:KeyIterator<K>| #[trigger] KeyIterator::between(*lo, ki, *hi) ==> self@[*ki.get()] == dst@,
-            forall |ki:KeyIterator<K>| !ki.is_end_spec() && !(#[trigger] KeyIterator::between(*lo, ki, *hi)) ==> self@[*ki.get()] == old(self)@[*ki.get()],
+            final(self).valid(),
+            forall |ki:KeyIterator<K>| #[trigger] KeyIterator::between(*lo, ki, *hi) ==> final(self)@[*ki.get()] == dst@,
+            forall |ki:KeyIterator<K>| !ki.is_end_spec() && !(#[trigger] KeyIterator::between(*lo, ki, *hi)) ==> final(self)@[*ki.get()] == old(self)@[*ki.get()],
     {
         if lo.lt(&hi) {
             let ghost mut glb;

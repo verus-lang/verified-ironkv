@@ -175,9 +175,9 @@ requires
     local_addr.abstractable(),
 ensures
     ({let (rr, net_event) = rc;
-        &&& netc.my_end_point() == old(netc).my_end_point()
-        &&& netc.ok() == !(rr is Fail)
-        &&& !(rr is Fail) ==> netc.ok() && netc.history() == old(netc).history() + seq!( net_event@ )
+        &&& final(netc).my_end_point() == old(netc).my_end_point()
+        &&& final(netc).ok() == !(rr is Fail)
+        &&& !(rr is Fail) ==> final(netc).ok() && final(netc).history() == old(netc).history() + seq!( net_event@ )
         &&& rr is Timeout ==> net_event@ is TimeoutReceive
         &&& (rr is Packet ==> {
             &&& net_event@ is Receive
@@ -279,13 +279,13 @@ requires
     outbound_packet_is_valid(cpacket),
     cpacket.src@ == old(netc).my_end_point(), // OutboundPacketsSeqHasCorrectSrc
 ensures
-    netc.my_end_point() == old(netc).my_end_point(),
+    final(netc).my_end_point() == old(netc).my_end_point(),
     ({
         let (ok, Ghost(net_event)) = rc;
         {
-    &&& netc.ok() <==> ok
+    &&& final(netc).ok() <==> ok
     &&& ok ==> net_event is Some
-    &&& ok ==> netc.history() == old(netc).history() + seq![net_event.unwrap()]
+    &&& ok ==> final(netc).history() == old(netc).history() + seq![net_event.unwrap()]
     &&& ok ==> rc.1@ is Some && send_log_entry_reflects_packet(net_event.unwrap(), &cpacket)
                 && is_marshalable_data(net_event.unwrap())
         }
@@ -357,12 +357,12 @@ requires
     outbound_packet_seq_is_valid(cpackets@),
     outbound_packet_seq_has_correct_srcs(cpackets@, old(netc).my_end_point()),
 ensures
-    netc.my_end_point() == old(netc).my_end_point(),
+    final(netc).my_end_point() == old(netc).my_end_point(),
     ({
         let (ok, Ghost(net_events)) = rc;
         {
-            &&& netc.ok() <==> ok
-            &&& ok ==> netc.history() == old(netc).history() + net_events
+            &&& final(netc).ok() <==> ok
+            &&& ok ==> final(netc).history() == old(netc).history() + net_events
             &&& ok ==> send_log_entries_reflect_packets(net_events, cpackets@)
             &&& ok ==> only_sent_marshalable_data(net_events)
             &&& forall |i| 0 <= i < net_events.len() ==> net_events[i] is Send
