@@ -4,25 +4,6 @@ use vstd::seq_lib::*;
 use vstd::set_lib::*;
 
 verus! {
-/// This fold uses a fixed zero rather than accumulating results in that
-/// argument. This means proofs don't need to generalize over the accumulator,
-/// unlike the Set::fold currently in Verus.
-pub open spec fn set_fold<A, B>(s: Set<A>, zero: B, f: spec_fn(B, A) -> B) -> B
-    decreases s.len()
-{
-    if s.len() == 0 {
-        zero
-    } else {
-        let a = s.choose();
-        f(set_fold(s.remove(a), zero, f), a)
-    }
-}
-
-pub proof fn lemma_flatten_sets_insert<A>(sets: Set<Set<A>>, s: Set<A>)
-    ensures sets.insert(s).flatten() == sets.flatten().union(s)
-{
-    broadcast use Set::flatten_insert_union_commute;
-}
 
 pub proof fn lemma_flatten_sets_union<A>(sets1: Set<Set<A>>, sets2: Set<Set<A>>)
     ensures
@@ -214,24 +195,6 @@ pub proof fn lemma_to_set_union_auto<A>()
 {
     assert forall |s: Seq<A>, t: Seq<A>| #[trigger] (s+t).to_set() == s.to_set() + t.to_set() by {
         lemma_to_set_distributes_over_addition(s, t);
-    }
-}
-
-spec fn map_fold<A, B>(s: Set<A>, f: spec_fn(A) -> B) -> Set<B>
-{
-    set_fold(s, Set::empty(), |s1: Set<B>, a: A| s1.insert(f(a)))
-}
-
-proof fn map_fold_ok<A, B>(s: Set<A>, f: spec_fn(A) -> B)
-    ensures map_fold(s, f) =~= s.map(f)
-    decreases s.len()
-{
-    if s.len() == 0 {
-        return;
-    } else {
-        let a = s.choose();
-        map_fold_ok(s.remove(a), f);
-        return;
     }
 }
 
