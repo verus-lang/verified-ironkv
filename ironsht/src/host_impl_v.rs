@@ -28,7 +28,8 @@ use crate::verus_extra::set_lib_ext_v::*;
 use vstd::assert_by_contradiction;
 use vstd::bytes::*;
 use vstd::calc_macro::*;
-use vstd::map::*; // TODO: prelude doesn't supply the macros?
+use vstd::imap::*;
+use vstd::map::*;
 use vstd::prelude::*;
 use vstd::seq_lib::*; // TODO: prelude doesn't supply the macros?
 use vstd::set::*;
@@ -423,7 +424,7 @@ impl HostState {
         assert(host_state.invariants(&netc.my_end_point())); // would pass some initial env state?
         assert(host_state@.delegation_map == AbstractDelegationMap::init(constants.root_identity@)) by {
             reveal(HostState::view);
-            assert_maps_equal!(host_state.delegation_map@, AbstractDelegationMap::init(constants.root_identity@)@);
+            assert_imaps_equal!(host_state.delegation_map@, AbstractDelegationMap::init(constants.root_identity@)@);
             assert(host_state.delegation_map@ == AbstractDelegationMap::init(constants.root_identity@)@);
         }
         assert(crate::host_protocol_t::init(host_state@, netc.my_end_point(), abstractify_args(*args)));
@@ -1349,8 +1350,8 @@ impl HostState {
     {
         pre.valid_implies_complete();
         post.valid_implies_complete();
-        assert_maps_equal!(AbstractDelegationMap(post@).0,
-                           AbstractDelegationMap(pre@).update(KeyRange::<AbstractKey>{ lo: *lo, hi: *hi }, dst@).0);
+        assert_imaps_equal!(AbstractDelegationMap(post@).0,
+                            AbstractDelegationMap(pre@).update(KeyRange::<AbstractKey>{ lo: *lo, hi: *hi }, dst@).0);
     }
 
     proof fn effect_of_hashmap_bulk_update(
@@ -1363,8 +1364,7 @@ impl HostState {
             forall |k| pre@.dom().contains(k) ==> #[trigger] valid_value(pre@[k]),
             valid_hashtable(other@),
             post@ == Map::<AbstractKey, Seq<u8>>::new(
-                |k: AbstractKey| (pre@.dom().contains(k) || other@.dom().contains(k))
-                                 && (kr.contains(k) ==> other@.dom().contains(k)),
+                pre@.dom().union(other@.dom()).filter(|k: AbstractKey| kr.contains(k) ==> other@.dom().contains(k)),
                 |k: AbstractKey| if other@.dom().contains(k) { other@[k] } else { pre@[k] }
             ),
        ensures
