@@ -17,16 +17,16 @@ use crate::network_t::*;
 verus! {
 
 #[verifier::ext_equal]  // effing INSAASAAAAANNE
-pub struct AbstractDelegationMap(pub Map<AbstractKey, AbstractEndPoint>);
+pub struct AbstractDelegationMap(pub IMap<AbstractKey, AbstractEndPoint>);
 
 impl AbstractDelegationMap {
     pub open spec fn init(root_identity: AbstractEndPoint) -> Self
     {
-        AbstractDelegationMap(Map::total(|k: AbstractKey| root_identity))
+        AbstractDelegationMap(IMap::total(|k: AbstractKey| root_identity))
     }
 
     #[verifier(inline)]
-    pub open spec fn view(self) -> Map<AbstractKey, AbstractEndPoint> {
+    pub open spec fn view(self) -> IMap<AbstractKey, AbstractEndPoint> {
         self.0
     }
 
@@ -46,7 +46,7 @@ impl AbstractDelegationMap {
         recommends
             self.is_complete(),
     {
-        AbstractDelegationMap(self@.union_prefer_right(Map::new(|k| newkr.contains(k), |k| host)))
+        AbstractDelegationMap(self@.union_prefer_right(IMap::new(|k| newkr.contains(k), |k| host)))
     }
 
     /// Translates Protocol/SHT/Delegations.i.dfy :: DelegateForKeyRangeIsHost

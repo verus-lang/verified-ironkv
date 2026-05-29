@@ -16,6 +16,7 @@ use crate::marshal_v::Marshalable;
 use crate::message_t::*;
 use crate::network_t::Packet;
 use crate::single_message_t::SingleMessage;
+use vstd::iset_lib::*;
 use vstd::map::*;
 use vstd::prelude::*;
 use vstd::seq_lib::*;
@@ -368,7 +369,7 @@ impl CSingleDelivery {
         assert(CAckState::un_acked_valid(&un_acked[i as int]));
         // assert(un_acked[i as int]@ == un_acked_at[i as int]);
         assert(un_acked_at[i as int] is Message);
-        assert_sets_equal!(
+        assert_isets_equal!(
             self@.un_acked_messages_for_dest_up_to(src, dst, i+1) ==
             self@.un_acked_messages_for_dest_up_to(src, dst, i).insert(packet)
         );
@@ -378,10 +379,10 @@ impl CSingleDelivery {
 impl SingleDelivery<Message> {
     pub proof fn lemma_un_acked_messages_for_dests_empty(&self, src: AbstractEndPoint, dests: Set<AbstractEndPoint>)
         requires dests == Set::<AbstractEndPoint>::empty()
-        ensures self.un_acked_messages_for_dests(src, dests) == Set::<Packet>::empty()
+        ensures self.un_acked_messages_for_dests(src, dests) == ISet::<Packet>::empty()
     {
         assert_sets_equal!(dests.map(|dst: AbstractEndPoint| self.un_acked_messages_for_dest(src, dst)) == set![]);
-        assert_sets_equal!(self.un_acked_messages_for_dests(src, dests) == set![]);
+        assert_isets_equal!(self.un_acked_messages_for_dests(src, dests) == ISet::<Packet>::empty());
     }
 }
 

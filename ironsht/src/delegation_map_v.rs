@@ -117,10 +117,8 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
     proof fn to_set(self) -> (s: Set<K>)
         requires self.valid(),
         ensures s == self@.to_set(),
-                s.finite(),
                 s.len() == self@.len(),
     {
-        seq_to_set_is_finite::<K>(self@);
         self@.unique_seq_to_set();
         self@.to_set()
     }
@@ -189,7 +187,7 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
                     assert(self@[n-1] == e);  // OBSERVE
                 }
             }
-            assert_sets_equal!(self@.to_set(), old(self)@.to_set().remove(k));
+            assert_isets_equal!(self@.to_iset(), old(self)@.to_iset().remove(k));
         }
         k
     }
@@ -209,16 +207,16 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
         let mut deleted = 0;
         let ghost mut deleted_set;
         proof {
-            deleted_set = Set::empty();
+            deleted_set = ISet::empty();
             assert_seqs_equal!(self@,
                                old(self)@.subrange(0, start as int) +
                                old(self)@.subrange(start as int + deleted as int,
                                                    old(self)@.len() as int));
-            assert_sets_equal!(deleted_set,
-                               old(self)@.subrange(start as int,
-                                                   start as int + deleted as int).to_set());
-            assert_sets_equal!(old(self)@.to_set(),
-                               self@.to_set() + deleted_set);
+            assert_isets_equal!(deleted_set,
+                                old(self)@.subrange(start as int,
+                                                    start as int + deleted as int).to_iset());
+            assert_isets_equal!(old(self)@.to_iset(),
+                                self@.to_iset() + deleted_set);
         }
         while deleted < end - start
             invariant
@@ -228,9 +226,9 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
                 old(self).valid(),
                 self.valid(),
                 self@ == old(self)@.subrange(0, start as int) + old(self)@.subrange(start as int + deleted as int, old(self)@.len() as int),
-                deleted_set == old(self)@.subrange(start as int, start as int + deleted as int).to_set(),
+                deleted_set == old(self)@.subrange(start as int, start as int + deleted as int).to_iset(),
                 deleted_set.len() == deleted,
-                old(self)@.to_set() == self@.to_set() + deleted_set,
+                old(self)@.to_iset() == self@.to_iset() + deleted_set,
             decreases
                 end - start - deleted,
         {
@@ -252,7 +250,6 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
                                                        old(self)@.len() as int));
                 let deleted_seq = old(self)@.subrange(start as int,
                                                       start as int + deleted as int);
-                seq_to_set_is_finite::<K>(deleted_seq);
                 deleted_seq.unique_seq_to_set();
 
                 assert forall |e| #[trigger] deleted_set.contains(e)
@@ -274,10 +271,10 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
                         assert(old_deleted_seq[i] == e);    // OBSERVE
                     }
                 }
-                assert_sets_equal!(deleted_set,
-                                   deleted_seq.to_set());
-                assert_sets_equal!(old(self)@.to_set(),
-                                   self@.to_set() + deleted_set);
+                assert_isets_equal!(deleted_set,
+                                    deleted_seq.to_iset());
+                assert_isets_equal!(old(self)@.to_iset(),
+                                    self@.to_iset() + deleted_set);
             }
         }
 
@@ -309,8 +306,8 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
             K::cmp_properties();
         }
         assert(self@.to_set() == old(self)@.to_set().insert(k)) by {
-            let new_s = self@.to_set();
-            let old_s = old(self)@.to_set().insert(k);
+            let new_s = self@.to_iset();
+            let old_s = old(self)@.to_iset().insert(k);
             assert(self@[index as int] == k);   // OBSERVE
             assert forall |e| old_s.contains(e) implies new_s.contains(e) by {
                 if e == k {
@@ -323,7 +320,7 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedVec<K> {
                     }
                 }
             };
-            assert_sets_equal!(new_s, old_s);
+            assert_isets_equal!(new_s, old_s);
         };
         return index;
     }
@@ -457,19 +454,18 @@ pub fn vec_erase<A>(v: &mut Vec<A>, start: usize, end: usize)
 struct StrictlyOrderedMap<K: KeyTrait + VerusClone> {
     keys: StrictlyOrderedVec<K>,
     vals: Vec<ID>,
-    m: Ghost<Map<K, ID>>,
+    m: Ghost<IMap<K, ID>>,
 }
 
 impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
-    pub closed spec fn view(self) -> Map<K,ID> {
+    pub closed spec fn view(self) -> IMap<K,ID> {
         self.m@
     }
 
     pub closed spec fn map_valid(self) -> bool
         // recommends self.keys@.len() == self.vals.len()  // error: public function requires cannot refer to private items
     {
-        &&& self.m@.dom().finite()
-        &&& self.m@.dom() == self.keys@.to_set()
+        &&& self.keys@.to_set().congruent(self.m@.dom())
         &&& forall |i| 0 <= i < self.keys@.len() ==> #[trigger] (self.m@[self.keys@.index(i)]) == self.vals@.index(i)
     }
 
@@ -517,12 +513,12 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
     fn new() -> (s: Self)
         ensures
             s.valid(),
-            s@ == Map::<K,ID>::empty(),
+            s@ == IMap::<K,ID>::empty(),
     {
         let keys = StrictlyOrderedVec::new();
-        let m = Ghost(Map::empty());
+        let m = Ghost(IMap::empty());
         proof {
-            assert_sets_equal!(m@.dom(), keys@.to_set());
+            assert_isets_equal!(m@.dom(), keys@.to_iset());
         }
         StrictlyOrderedMap {
             keys,
@@ -703,7 +699,7 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
                 self.vals.set(i, v);
                 self.m = Ghost(self.m@.insert(k, v));
                 proof {
-                    assert_sets_equal!(self.m@.dom() == self.keys@.to_set());
+                    assert_isets_equal!(self.m@.dom() == self.keys@.to_iset());
                 }
             },
             None => {
@@ -919,13 +915,13 @@ impl<K: KeyTrait + VerusClone> StrictlyOrderedMap<K> {
 
         self.keys.erase(start, end);
         vec_erase(&mut self.vals, start, end);
-        self.m = Ghost(Map::new(|k| self.keys@.to_set().contains(k),
-                                |k| { let i = choose |i| 0 <= i < self.keys@.len() && self.keys@[i] == k;
-                                      self.vals@[i]}));
+        self.m = Ghost(IMap::new(|k| self.keys@.to_set().contains(k),
+                                 |k| { let i = choose |i| 0 <= i < self.keys@.len() && self.keys@[i] == k;
+                                       self.vals@[i]}));
         proof {
             let ks = self.keys.to_set();
-            assert(self.keys@.to_set() == ks);
-            assert_sets_equal!(self.m@.dom(), ks);
+            assert(self.keys@.to_iset() == ks.to_iset());
+            assert_isets_equal!(self.m@.dom(), ks.to_iset());
         }
 
         assert forall |k| {
@@ -1029,12 +1025,12 @@ pub struct DelegationMap<K: KeyTrait + VerusClone> {
     // Our efficient implementation based on ranges
     lows: StrictlyOrderedMap<K>,
     // Our spec version
-    m: Ghost<Map<K, AbstractEndPoint>>,
+    m: Ghost<IMap<K, AbstractEndPoint>>,
 
 }
 
 impl<K: KeyTrait + VerusClone> DelegationMap<K> {
-    pub closed spec fn view(self) -> Map<K,AbstractEndPoint> {
+    pub closed spec fn view(self) -> IMap<K,AbstractEndPoint> {
         self.m@
     }
 
@@ -1056,11 +1052,11 @@ impl<K: KeyTrait + VerusClone> DelegationMap<K> {
             id_zero@.valid_physical_address(),
         ensures
             s.valid(),
-            s@ == Map::total(|k: K| id_zero@),
+            s@ == IMap::total(|k: K| id_zero@),
     {
         let mut lows = StrictlyOrderedMap::new();
         lows.set(k_zero, id_zero);
-        let m = Ghost(Map::total(|k| id_zero@));
+        let m = Ghost(IMap::total(|k| id_zero@));
         let s = DelegationMap { lows, m };
         s
     }
@@ -1136,10 +1132,10 @@ impl<K: KeyTrait + VerusClone> DelegationMap<K> {
             let ghost mut erased_vec; proof { erased_vec = self.lows; }
             self.lows.set(lo.get().clone(), clone_end_point(dst));
             self.m = Ghost(self.m@.union_prefer_right(
-                        Map::new(|k| KeyIterator::between(*lo, KeyIterator::new_spec(k), *hi),
-                                 |k| dst@)));
+                        IMap::new(|k| KeyIterator::between(*lo, KeyIterator::new_spec(k), *hi),
+                                  |k| dst@)));
             assert(self@.dom().is_full()) by {
-                assert_sets_equal!(self@.dom(), Set::full());
+                assert_isets_equal!(self@.dom(), ISet::full());
             }
             assert (self.lows@.contains_key(K::zero_spec())) by {
                 let ki = KeyIterator::new_spec(K::zero_spec());
