@@ -565,6 +565,7 @@ impl CSingleDelivery {
             outbound_packet_seq_is_valid(packets@),
             outbound_packet_seq_has_correct_srcs(packets@, src@),
             cpacket_seq_is_abstractable(packets@),
+            dests@.map_values(|ep: EndPoint| ep@).to_set().subset_of(self@.send_state.dom()),
             dests@.subrange(0, dst_i as int).map_values(|ep: EndPoint| ep@).to_set().subset_of(self@.send_state.dom()),
             packets@.map_values(|p: CPacket| p@).to_set().congruent(
                 self@.un_acked_messages_for_dests(src@, dests@.subrange(0, dst_i as int).map_values(|ep: EndPoint| ep@).to_set())
@@ -595,55 +596,62 @@ impl CSingleDelivery {
                 assert_seqs_equal!(depc == depa + depb);
                 assert_seqs_equal!( depb == seq![*dst] );
 
-                lemma_to_set_singleton_auto::<AbstractEndPoint>();
-                lemma_to_set_singleton_auto::<EndPoint>();
-                lemma_map_values_singleton_auto::<EndPoint, AbstractEndPoint>();
-                lemma_map_set_singleton_auto::<AbstractEndPoint,Set<Packet>>();
-                lemma_map_seq_singleton_auto::<AbstractEndPoint,Set<Packet>>(); // was involved in a trigger loop when `set_map_union_auto` also required finite maps
-                lemma_to_set_union_auto::<AbstractEndPoint>();  // somehow helps below, so saith Tej
-                seq_map_values_concat_auto::<EndPoint, AbstractEndPoint>();
-
                 let old_s1 = packets0_view.map_values(|p: CPacket| p@).to_set();
                 let s1 = packets@.map_values(|p: CPacket| p@).to_set();
                 let old_s2 = self@.un_acked_messages_for_dests(src@, dests@.subrange(0, dst_i - 1).map_values(
                     |ep: EndPoint| ep@
                 ).to_set());
+                assert(dests@.subrange(0, dst_i as int).map_values(|ep: EndPoint| ep@).to_set()
+                       .subset_of(dests@.map_values(|ep: EndPoint| ep@).to_set())) by {
+                    let s = dests@.subrange(0, dst_i as int).map_values(|ep: EndPoint| ep@);
+                    assert forall|aep| s.contains(aep) implies dests@.map_values(|ep: EndPoint| ep@).contains(aep) by {
+                        let j = choose|j| 0 <= j < s.len() && s[j] == aep;
+                        assert(dests@[j] == dests@.subrange(0, dst_i as int)[j]);
+                        assert(dests@.map_values(|ep: EndPoint| ep@)[j] == aep);
+                        assert(dests@.map_values(|ep: EndPoint| ep@).contains(aep));
+                    }
+                }
+                assert(dests@.subrange(0, dst_i as int).map_values(|ep: EndPoint| ep@)
+                       .to_set().subset_of(self@.send_state.dom()));
                 let s2 = self@.un_acked_messages_for_dests(src@, dests@.subrange(0, dst_i as int).map_values(
                     |ep: EndPoint| ep@
                 ).to_set());
-                let dests_i_1 = dests@.subrange(0, dst_i - 1).map_values(|ep: EndPoint| ep@).to_set();
-                let dests_i = dests@.subrange(0, dst_i as int).map_values(|ep: EndPoint| ep@).to_set();
+                let dests_i_1 = dests@.subrange(0, dst_i - 1).map_values(|ep: EndPoint| ep@);
+                let dests_i = dests@.subrange(0, dst_i as int).map_values(|ep: EndPoint| ep@);
                 assert forall|p| #[trigger] s1.contains(p) implies s2.contains(p) by {
                     if old_s1.contains(p) {
-                        let ps = choose|ps| dests_i_1.map(
+                        let ps = choose|ps| dests_i_1.to_set().map(
                             |dst: AbstractEndPoint| self@.un_acked_messages_for_dest(src@, dst)
                         ).to_iset().contains(ps) && ps.contains(p);
                         let dst = choose|dst| {
-                            &&& #[trigger] dests_i_1.contains(dst)
+                            &&& #[trigger] dests_i_1.to_set().contains(dst)
                             &&& self@.un_acked_messages_for_dest(src@, dst) == ps
                         };
-                        assert(dests_i.contains(dst));
-                        assert(dests_i.map(
+                        let j = choose|j| 0 <= j < dests_i_1.len() && dests_i_1[j] == dst;
+                        assert(dests_i[j] == dst);
+                        assert(dests_i.to_set().contains(dst));
+                        assert(dests_i.to_set().map(
                             |dst: AbstractEndPoint| self@.un_acked_messages_for_dest(src@, dst)
                         ).to_iset().contains(ps));
                     }
                     else {
                         let ps = self@.un_acked_messages_for_dest(src@, dst@);
                         assert(ps.contains(p));
-                        assert(dests_i.contains(dst@));
-                        assert(dests_i.map(|ep| self@.un_acked_messages_for_dest(src@, ep)).to_iset().contains(ps));
+                        assert(dests_i[dst_i - 1] == dst@);
+                        assert(dests_i.to_set().contains(dst@));
+                        assert(dests_i.to_set().map(|ep| self@.un_acked_messages_for_dest(src@, ep)).to_iset().contains(ps));
                     }
                 }
                 assert forall|p| #[trigger] s2.contains(p) implies s1.contains(p) by {
-                    assert(dests_i.map(|ep| self@.un_acked_messages_for_dest(src@, ep))
+                    assert(dests_i.to_set().map(|ep| self@.un_acked_messages_for_dest(src@, ep))
                            .to_iset().flatten().contains(p));
-                    let ps = choose|ps| dests_i.map(|ep| self@.un_acked_messages_for_dest(src@, ep))
+                    let ps = choose|ps| dests_i.to_set().map(|ep| self@.un_acked_messages_for_dest(src@, ep))
                         .to_iset().contains(ps) && ps.contains(p);
                     let aep = choose|aep| {
-                        &&& #[trigger] dests_i.contains(aep)
+                        &&& #[trigger] dests_i.to_set().contains(aep)
                         &&& self@.un_acked_messages_for_dest(src@, aep) == ps
                     };
-                    assert(dests_i.contains(aep) && self@.un_acked_messages_for_dest(src@, aep) == ps);
+                    assert(dests_i.to_set().contains(aep) && self@.un_acked_messages_for_dest(src@, aep) == ps);
                     assert(dests@.subrange(0, dst_i as int).map_values(|ep: EndPoint| ep@).contains(aep));
                     let aeps = dests@.subrange(0, dst_i as int).map_values(|ep: EndPoint| ep@);
                     let j = choose|j: int| 0 <= j < aeps.len() && aeps[j] == aep;
@@ -652,10 +660,11 @@ impl CSingleDelivery {
                     assert(dests@.subrange(0, dst_i as int).contains(ep) && ep@ == aep);
                     if j < dst_i - 1 {
                         assert(dests@.subrange(0, dst_i - 1).contains(ep));
-                        assert(dests_i_1.contains(aep));
-                        assert(dests_i_1.map(|ep| self@.un_acked_messages_for_dest(src@, ep))
+                        assert(dests_i_1[j] == aep);
+                        assert(dests_i_1.to_set().contains(aep));
+                        assert(dests_i_1.to_set().map(|ep| self@.un_acked_messages_for_dest(src@, ep))
                                .to_iset().contains(ps));
-                        assert(dests_i_1.map(|ep| self@.un_acked_messages_for_dest(src@, ep))
+                        assert(dests_i_1.to_set().map(|ep| self@.un_acked_messages_for_dest(src@, ep))
                                .to_iset().flatten().contains(p));
                         assert(old_s2.contains(p));
                         assert(old_s1.contains(p));
@@ -667,7 +676,7 @@ impl CSingleDelivery {
                         assert(dests@[j] == dst);
                         let ps = self@.un_acked_messages_for_dest(src@, dst@);
                         assert(ps.contains(p));
-                        assert(dests_i.contains(dst@));
+                        assert(dests_i.to_set().contains(dst@));
                         assert(s1.contains(p));
                     }
                 }
