@@ -28,7 +28,7 @@ use crate::single_delivery_t::*;
 verus! {
 
 /// translates `AckState<MT = CMessage>` (that is, we specialize the message type)
-#[verifier::ext_equal]  // effing INSAASAAAAANNE
+#[verifier::ext_equal]
 pub struct CAckState {
     pub num_packets_acked: u64,
     pub un_acked: Vec<CSingleMessage>,

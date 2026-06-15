@@ -16,7 +16,7 @@ use crate::network_t::*;
 
 verus! {
 
-#[verifier::ext_equal]  // effing INSAASAAAAANNE
+#[verifier::ext_equal]
 pub struct AbstractDelegationMap(pub IMap<AbstractKey, AbstractEndPoint>);
 
 impl AbstractDelegationMap {
