@@ -75,15 +75,14 @@ pub open spec(checked) fn hashtable_lookup(h: Hashtable, k: AbstractKey) -> Opti
 // Protocol/SHT/Delegations.i.dfy BulkUpdateDomain
 pub open spec(checked) fn bulk_update_domain(h: Hashtable, kr: KeyRange<AbstractKey>, u: Hashtable) -> Set<AbstractKey>
 {
-    Set::<AbstractKey>::new(|k| (h.dom().contains(k) || u.dom().contains(k))
-                                && (kr.contains(k) ==> u.dom().contains(k)))
+    h.dom().union(u.dom()).filter(|k| kr.contains(k) ==> u.dom().contains(k))
 }
 
 // Protocol/SHT/Delegations.i.dfy BulkUpdateHashtable
 pub open spec /*(checked) because lambdas*/ fn bulk_update_hashtable(h: Hashtable, kr: KeyRange<AbstractKey>, u: Hashtable) -> Hashtable
 {
     Map::<AbstractKey, AbstractValue>::new(
-        |k: AbstractKey| bulk_update_domain(h, kr, u).contains(k),
+        bulk_update_domain(h, kr, u),
         |k: AbstractKey| if u.dom().contains(k) { u[k] } else { h[k] }
     )
 }
@@ -92,7 +91,7 @@ pub open spec /*(checked) because lambdas*/ fn bulk_update_hashtable(h: Hashtabl
 pub open spec/*(checked) because lambdas*/ fn bulk_remove_hashtable(h: Hashtable, kr: KeyRange<AbstractKey>) -> Hashtable
 {
     Map::<AbstractKey, AbstractValue>::new(
-        |k: AbstractKey| h.dom().contains(k) && !kr.contains(k),
+        h.dom().filter(|k: AbstractKey| !kr.contains(k)),
         |k: AbstractKey| h[k]
     )
 }
@@ -454,7 +453,7 @@ pub open spec(checked) fn process_received_packet_next(pre: AbstractHostState, p
 }
 
 pub open spec(checked) fn spontaneously_retransmit(pre: AbstractHostState, post: AbstractHostState, out: Set<Packet>) -> bool {
-    &&& out == SingleDelivery::un_acked_messages(pre.sd, pre.constants.me)
+    &&& out.congruent(SingleDelivery::un_acked_messages(pre.sd, pre.constants.me))
     &&& post == pre
 }
 

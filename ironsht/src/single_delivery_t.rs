@@ -13,7 +13,6 @@ use crate::abstract_parameters_t::*;
 use crate::message_t::*;
 use crate::network_t::*;
 use crate::single_message_t::*;
-use crate::verus_extra::set_lib_ext_v::flatten_sets;
 
 verus! {
 
@@ -198,12 +197,12 @@ impl<MT> SingleDelivery<MT> {
 }
 
 impl SingleDelivery<Message> {
-    pub open spec(checked) fn un_acked_messages_for_dest_up_to(self, src: AbstractEndPoint, dst: AbstractEndPoint, count: nat) -> Set<Packet>
+    pub open spec(checked) fn un_acked_messages_for_dest_up_to(self, src: AbstractEndPoint, dst: AbstractEndPoint, count: nat) -> ISet<Packet>
     recommends
         self.send_state.contains_key(dst),
         count <= self.send_state[dst].un_acked.len()
     {
-        Set::new(|p: Packet| {
+        ISet::new(|p: Packet| {
                 &&& p.src == src
                 &&& exists |i: int| {
                     &&& 0 <= i < count
@@ -214,7 +213,7 @@ impl SingleDelivery<Message> {
         })
     }
 
-    pub open spec(checked) fn un_acked_messages_for_dest(self, src: AbstractEndPoint, dst: AbstractEndPoint) -> Set<Packet>
+    pub open spec(checked) fn un_acked_messages_for_dest(self, src: AbstractEndPoint, dst: AbstractEndPoint) -> ISet<Packet>
     recommends
         self.send_state.contains_key(dst)
     {
@@ -227,16 +226,14 @@ impl SingleDelivery<Message> {
     // as well remember the order and make use of it the whole way through. The
     // only slight cost is that we will need to implement a
     // union-of-seq-of-sets, just like in IronFleet.
-    pub open spec fn un_acked_messages_for_dests(self, src: AbstractEndPoint, dsts: Set<AbstractEndPoint>) -> Set<Packet>
+    pub open spec fn un_acked_messages_for_dests(self, src: AbstractEndPoint, dsts: Set<AbstractEndPoint>) -> ISet<Packet>
         recommends dsts.subset_of(self.send_state.dom())
     {
-        flatten_sets(
-            dsts.map(|dst: AbstractEndPoint| self.un_acked_messages_for_dest(src, dst))
-        )
+        dsts.map(|dst: AbstractEndPoint| self.un_acked_messages_for_dest(src, dst)).to_iset().flatten()
     }
 
     /// Re-written Protocol/SHT/SingleDelivery.i.dfy UnAckedMessages
-    pub open spec fn un_acked_messages(self, src: AbstractEndPoint) -> Set<Packet>
+    pub open spec fn un_acked_messages(self, src: AbstractEndPoint) -> ISet<Packet>
     {
         self.un_acked_messages_for_dests(src, self.send_state.dom())
     }

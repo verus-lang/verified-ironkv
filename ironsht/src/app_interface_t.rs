@@ -28,7 +28,7 @@ pub open spec fn valid_value(value: AbstractValue) -> bool { value.len() < max_v
 pub open spec fn extract_range(h: Hashtable, kr: KeyRange<AbstractKey>) -> Hashtable
 {
     Map::<AbstractKey, AbstractValue>::new(
-        |k: AbstractKey| h.dom().contains(k) && kr.contains(k),
+        h.dom().filter(|k: AbstractKey| kr.contains(k)),
         |k: AbstractKey| h[k]
     )
 }

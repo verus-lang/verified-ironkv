@@ -82,8 +82,9 @@ impl CKeyHashMap {
     #[verifier(external_body)]
     pub fn bulk_update(&mut self, kr: &KeyRange::<CKey>, other: &Self)
         ensures final(self)@ == Map::<AbstractKey, Seq<u8>>::new(
-            |k: AbstractKey| (old(self)@.dom().contains(k) || other@.dom().contains(k))
-                             && (kr.contains(k) ==> other@.dom().contains(k)),
+            old(self)@.dom().union(other@.dom()).filter(
+                |k: AbstractKey| kr.contains(k) ==> other@.dom().contains(k)
+            ),
             |k: AbstractKey| if other@.dom().contains(k) { other@[k] } else { old(self)@[k] }
         )
     {
@@ -94,7 +95,7 @@ impl CKeyHashMap {
     pub fn bulk_remove(&mut self, kr: &KeyRange::<CKey>)
     ensures
         final(self)@ == Map::<AbstractKey, Seq<u8>>::new(
-            |k: AbstractKey| old(self)@.dom().contains(k) && !kr.contains(k),
+            old(self)@.dom().filter(|k: AbstractKey| !kr.contains(k)),
             |k: AbstractKey| old(self)@[k])
     {
         panic!()
@@ -168,7 +169,7 @@ impl CKeyHashMap {
     pub open spec fn filter_spec(self, fs: spec_fn(CKey)->bool) -> Map<AbstractKey, Seq<u8>>
     {
         Map::<AbstractKey, Seq<u8>>::new(
-            |k: AbstractKey| self@.dom().contains(k) && fs(k),
+            self@.dom().filter(|k: AbstractKey| fs(k)),
             |k: AbstractKey| self@[k]
         )
     }
