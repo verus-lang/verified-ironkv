@@ -328,7 +328,7 @@ verus! {
     /* $line_count$Proof$ */         #[tag = 5]
     /* $line_count$Proof$ */         Delegate{ #[o=o0] range: KeyRange::<CKey>, #[o=o1] h: CKeyHashMap},
     /* $line_count$Proof$ */     }
-    /* $line_count$Proof$ */     [rlimit attr = verifier::rlimit(20)]
+    /* $line_count$Proof$ */     [rlimit attr = verifier::rlimit(40)]
     /* $line_count$Proof$ */ }
 
 }

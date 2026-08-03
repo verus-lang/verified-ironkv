@@ -1514,6 +1514,7 @@ macro_rules! derive_marshalable_for_enum {
           }
           Some((x, end))
         }
+        $( #[$rlimitattr] )?
         proof fn lemma_serialization_is_not_a_prefix_of(self: &Self, other: &Self)
         // req, ens from trait
         {
