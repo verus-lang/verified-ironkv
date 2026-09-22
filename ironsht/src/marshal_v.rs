@@ -587,6 +587,40 @@ impl<T: Marshalable> Marshalable for Option<T> {
   }
 }
 
+proof fn lemma_serialized_elements_decompose<T: Marshalable>(s: Seq<T>, idx: int)
+  requires
+    0 <= idx < s.len(),
+  ensures
+    s.fold_left(Seq::<u8>::empty(), |acc: Seq<u8>, x: T| acc + x.ghost_serialize())
+      == (s.subrange(0, idx).fold_left(
+            Seq::<u8>::empty(), |acc: Seq<u8>, x: T| acc + x.ghost_serialize())
+          + s[idx].ghost_serialize())
+          + s.subrange(idx + 1, s.len() as int).fold_left(
+            Seq::<u8>::empty(), |acc: Seq<u8>, x: T| acc + x.ghost_serialize()),
+{
+  let emp = Seq::<u8>::empty();
+  let g = |x: T| x.ghost_serialize();
+  let accg = |acc: Seq<u8>, x: T| acc + g(x);
+  let gs = |s: Seq<T>, start: int, end: int| s.subrange(start, end).fold_left(emp, accg);
+  assert(gs(s, 0, s.len() as int) == gs(s, 0, idx) + gs(s, idx, s.len() as int)) by {
+    let s1 = s.subrange(0, idx);
+    let s2 = s.subrange(idx, s.len() as int);
+    lemma_fold_left_append_merge(s1, s2, g);
+    assert(s.subrange(0, s.len() as int) =~= s1 + s2);
+  }
+  assert(gs(s, idx, s.len() as int) == g(s[idx]) + gs(s, idx + 1, s.len() as int)) by {
+    let s1 = s.subrange(idx, idx + 1);
+    let s2 = s.subrange(idx + 1, s.len() as int);
+    lemma_fold_left_append_merge(s1, s2, g);
+    assert(s.subrange(idx, s.len() as int) =~= s1 + s2);
+    assert(s.subrange(idx, idx + 1) =~= seq![s[idx]]);
+    reveal_with_fuel(Seq::fold_left, 2);
+    assert(emp + g(s[idx]) =~= g(s[idx]));
+  }
+  assert(s.subrange(0, s.len() as int) =~= s);
+  assert(accg =~= (|acc: Seq<u8>, x: T| acc + x.ghost_serialize()));
+}
+
 impl<T: Marshalable> Marshalable for Vec<T> {
   open spec fn view_equal(&self, other: &Self) -> bool {
     let s = self@;
@@ -914,42 +948,14 @@ impl<T: Marshalable> Marshalable for Vec<T> {
       let accgs = |acc: Seq<u8>, x: T| acc + x.ghost_serialize();
       let gs = |s: Seq<T>, start: int, end: int| s.subrange(start, end).fold_left(emp, accg);
       assert(accg =~= accgs);
+      lemma_serialized_elements_decompose(self@, idx);
       assert(self.ghost_serialize() =~= ((self@.len() as usize).ghost_serialize() + gs(self@, 0, idx)) + g(self@[idx]) + gs(self@, idx + 1, self.len() as int)) by {
-        assert(gs(self@, 0, self.len() as int) == gs(self@, 0, idx) + gs(self@, idx, self.len() as int)) by {
-          let s1 = self@.subrange(0, idx);
-          let s2 = self@.subrange(idx, self.len() as int);
-          lemma_fold_left_append_merge(s1, s2, g);
-          assert(self@.subrange(0, self.len() as int) =~= s1 + s2);
-        }
-        assert(gs(self@, idx, self.len() as int) == g(self@[idx]) + gs(self@, idx + 1, self.len() as int)) by {
-          let s1 = self@.subrange(idx, idx + 1);
-          let s2 = self@.subrange(idx + 1, self.len() as int);
-          lemma_fold_left_append_merge(s1, s2, g);
-          assert(self@.subrange(idx, self.len() as int) =~= s1 + s2);
-          assert(self@.subrange(idx, idx + 1) =~= seq![self@[idx]]);
-          reveal_with_fuel(Seq::fold_left, 2);
-          assert(emp + g(self@[idx]) =~= g(self@[idx]));
-        }
         assert((self@.len() as usize).ghost_serialize() + gs(self@, 0, self.len() as int) == self.ghost_serialize()) by {
           assert(self@.subrange(0, self.len() as int) =~= self@);
         }
       }
+      lemma_serialized_elements_decompose(other@, idx);
       assert(other.ghost_serialize() =~= ((other@.len() as usize).ghost_serialize() + gs(other@, 0, idx)) + g(other@[idx]) + gs(other@, idx + 1, other.len() as int)) by {
-        assert(gs(other@, 0, other.len() as int) == gs(other@, 0, idx) + gs(other@, idx, other.len() as int)) by {
-          let s1 = other@.subrange(0, idx);
-          let s2 = other@.subrange(idx, other.len() as int);
-          lemma_fold_left_append_merge(s1, s2, g);
-          assert(other@.subrange(0, other.len() as int) =~= s1 + s2);
-        }
-        assert(gs(other@, idx, other.len() as int) == g(other@[idx]) + gs(other@, idx + 1, other.len() as int)) by {
-          let s1 = other@.subrange(idx, idx + 1);
-          let s2 = other@.subrange(idx + 1, other.len() as int);
-          lemma_fold_left_append_merge(s1, s2, g);
-          assert(other@.subrange(idx, other.len() as int) =~= s1 + s2);
-          assert(other@.subrange(idx, idx + 1) =~= seq![other@[idx]]);
-          reveal_with_fuel(Seq::fold_left, 2);
-          assert(emp + g(other@[idx]) =~= g(other@[idx]));
-        }
         assert((other@.len() as usize).ghost_serialize() + gs(other@, 0, other.len() as int) == other.ghost_serialize()) by {
           assert(other@.subrange(0, other.len() as int) =~= other@);
         }
