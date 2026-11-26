@@ -175,6 +175,7 @@ impl CKeyHashMap {
     }
 
     // TODO: Move this concept into a Verus standard library
+    #[verifier::prophetic]
     pub open spec fn predicate_models<T, EF: Fn(T)->bool>(
         exec_fn: EF, spec_fn: spec_fn(T)->bool) -> bool
     {
